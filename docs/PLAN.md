@@ -38,7 +38,8 @@ Every phase has the same structure:
 | Attack scenarios (tamper, replay, spike, wind, suppress, drift) | ✅ Written as functions |
 | Tests (signing, crypto gate, physics, pipeline, API) | ✅ **23 passing** (Phase 0, see [`PHASE_0.md`](PHASE_0.md)) |
 | Environment, git, private repo `hackathon-sea` | ✅ Phase 0 done |
-| NOAA data, simulator replay, ML model, spatial check | ⬜ Skeleton only |
+| NOAA data: cluster 42036/42097/42099/42013, cleaned, storms found, split defined | ✅ Phase 1 done ([`PHASE_1.md`](PHASE_1.md), [`data-notes.md`](data-notes.md)) |
+| Simulator replay, ML model, spatial check | ⬜ Skeleton only |
 | API persistence, WebSocket feed, dashboard pages | ⬜ Skeleton only |
 | Vultr deployment | ⬜ Not started (no resource created, $0 spent) |
 
@@ -139,8 +140,11 @@ Every phase has the same structure:
 **Goal:** virtual buoys replay the real data as signed messages through Mosquitto, and the engine receives them.
 
 **Steps**
+0. **Add a signed `observed_at` field** (measurement time) to `Telemetry` (decided in Phase 1,
+   see `decisions/0003`). The simulator sets it from the historical timestamp; physics rate
+   checks will use it, while replay protection keeps using `ts`.
 1. **Implement `seashield/simulator/replay.py`**: read the parquet, optional `start` date,
-   yield `Measurements` per row (NaN → `None`).
+   yield `Measurements` per row (NaN → `None`), only for the buoy's own `sensors`.
 2. **Time compression:** one historical hour = one message every `SEASHIELD_PUBLISH_INTERVAL_S`
    seconds (2 s default). A 3-day storm then replays in ~2.5 min, which is perfect for a live demo.
 3. Add a **scenario start option** to the simulator (`--start 2024-09-10T00:00`) so the demo can
@@ -541,7 +545,7 @@ back what happened.
 ## 15. Master checklist
 
 - [x] Phase 0: environment works, tests green, first commit, private repo → [`PHASE_0.md`](PHASE_0.md)
-- [ ] Phase 1: buoy cluster chosen, data cleaned, storm identified, split defined
+- [x] Phase 1: buoy cluster chosen, data cleaned, storm identified, split defined → [`PHASE_1.md`](PHASE_1.md)
 - [ ] Phase 2: simulator replays data over MQTT, engine receives
 - [ ] Phase 3: attacker CLI; tamper/replay rejected; spike held
 - [ ] Phase 4: unprotected vs SeaShield recorded side by side

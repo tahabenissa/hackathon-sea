@@ -14,11 +14,12 @@ class Buoy:
     ndbc_station: str | None
     lat: float | None
     lon: float | None
+    sensors: tuple[str, ...] = ()  # SeaShield fields this station reports (heterogeneous network)
 
 
 def load_buoys(path: str | Path) -> list[Buoy]:
     raw = yaml.safe_load(Path(path).read_text(encoding="utf-8"))
-    return [Buoy(**b) for b in raw["buoys"]]
+    return [Buoy(**{**b, "sensors": tuple(b.get("sensors") or ())}) for b in raw["buoys"]]
 
 
 def load_keys(path: str | Path) -> dict[str, bytes]:

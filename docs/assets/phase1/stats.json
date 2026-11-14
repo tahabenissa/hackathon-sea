@@ -1,0 +1,370 @@
+{
+  "coverage_pct": {
+    "SS-B01": {
+      "wave_height_m": 99.9,
+      "dominant_period_s": 94.8,
+      "wind_speed_ms": 99.8,
+      "pressure_hpa": 99.8,
+      "water_temp_c": 50.6
+    },
+    "SS-B02": {
+      "wave_height_m": 73.8,
+      "dominant_period_s": 71.6,
+      "wind_speed_ms": 0.0,
+      "pressure_hpa": 0.0,
+      "water_temp_c": 73.8
+    },
+    "SS-B03": {
+      "wave_height_m": 88.4,
+      "dominant_period_s": 86.1,
+      "wind_speed_ms": 0.0,
+      "pressure_hpa": 0.0,
+      "water_temp_c": 88.4
+    },
+    "SS-B04": {
+      "wave_height_m": 0.0,
+      "dominant_period_s": 0.0,
+      "wind_speed_ms": 97.0,
+      "pressure_hpa": 97.0,
+      "water_temp_c": 95.0
+    }
+  },
+  "hourly_change": {
+    "SS-B01": {
+      "wave_height_m": {
+        "p50": 0.03,
+        "p99": 0.305,
+        "p99.9": 0.624,
+        "max": 1.32
+      },
+      "dominant_period_s": {
+        "p50": 0.21,
+        "p99": 2.475,
+        "p99.9": 4.818,
+        "max": 6.365
+      },
+      "wind_speed_ms": {
+        "p50": 0.417,
+        "p99": 2.883,
+        "p99.9": 5.312,
+        "max": 8.817
+      },
+      "pressure_hpa": {
+        "p50": 0.3,
+        "p99": 1.24,
+        "p99.9": 2.729,
+        "max": 15.35
+      },
+      "water_temp_c": {
+        "p50": 0.033,
+        "p99": 0.3,
+        "p99.9": 0.574,
+        "max": 1.067
+      }
+    },
+    "SS-B02": {
+      "wave_height_m": {
+        "p50": 0.03,
+        "p99": 0.27,
+        "p99.9": 0.589,
+        "max": 1.385
+      },
+      "dominant_period_s": {
+        "p50": 0.185,
+        "p99": 1.946,
+        "p99.9": 3.793,
+        "max": 7.975
+      },
+      "water_temp_c": {
+        "p50": 0.05,
+        "p99": 0.45,
+        "p99.9": 0.8,
+        "max": 1.25
+      }
+    },
+    "SS-B03": {
+      "wave_height_m": {
+        "p50": 0.025,
+        "p99": 0.27,
+        "p99.9": 0.48,
+        "max": 2.905
+      },
+      "dominant_period_s": {
+        "p50": 0.19,
+        "p99": 2.6,
+        "p99.9": 4.557,
+        "max": 9.42
+      },
+      "water_temp_c": {
+        "p50": 0.05,
+        "p99": 0.55,
+        "p99.9": 0.95,
+        "max": 1.6
+      }
+    },
+    "SS-B04": {
+      "wind_speed_ms": {
+        "p50": 0.45,
+        "p99": 3.376,
+        "p99.9": 5.978,
+        "max": 11.8
+      },
+      "pressure_hpa": {
+        "p50": 0.3,
+        "p99": 1.15,
+        "p99.9": 1.9,
+        "max": 5.4
+      },
+      "water_temp_c": {
+        "p50": 0.05,
+        "p99": 0.4,
+        "p99.9": 0.75,
+        "max": 1.1
+      }
+    }
+  },
+  "neighbour_waves": [
+    {
+      "pair": "SS-B01-SS-B02",
+      "distance_km": 322,
+      "overlap_hours": 19403,
+      "correlation": 0.763,
+      "abs_diff_median_m": 0.22,
+      "abs_diff_p95_m": 0.88,
+      "abs_diff_p99_m": 1.47
+    },
+    {
+      "pair": "SS-B01-SS-B03",
+      "distance_km": 130,
+      "overlap_hours": 23209,
+      "correlation": 0.915,
+      "abs_diff_median_m": 0.13,
+      "abs_diff_p95_m": 0.53,
+      "abs_diff_p99_m": 0.79
+    },
+    {
+      "pair": "SS-B02-SS-B03",
+      "distance_km": 193,
+      "overlap_hours": 17692,
+      "correlation": 0.867,
+      "abs_diff_median_m": 0.15,
+      "abs_diff_p95_m": 0.65,
+      "abs_diff_p99_m": 1.09
+    }
+  ],
+  "events": [
+    {
+      "event": "Idalia (2023-08-30)",
+      "buoy": "SS-B01",
+      "wave_max_m": 6.28,
+      "wind_max_ms": 23.73,
+      "pressure_min_hpa": 975.17,
+      "wave_coverage_pct": 100
+    },
+    {
+      "event": "Idalia (2023-08-30)",
+      "buoy": "SS-B02",
+      "wave_max_m": 6.06,
+      "wind_max_ms": null,
+      "pressure_min_hpa": null,
+      "wave_coverage_pct": 100
+    },
+    {
+      "event": "Idalia (2023-08-30)",
+      "buoy": "SS-B03",
+      "wave_max_m": 9.98,
+      "wind_max_ms": null,
+      "pressure_min_hpa": null,
+      "wave_coverage_pct": 42
+    },
+    {
+      "event": "Idalia (2023-08-30)",
+      "buoy": "SS-B04",
+      "wave_max_m": null,
+      "wind_max_ms": 17.85,
+      "pressure_min_hpa": 1001.45,
+      "wave_coverage_pct": 0
+    },
+    {
+      "event": "Winter front (2023-12-17)",
+      "buoy": "SS-B01",
+      "wave_max_m": 5.31,
+      "wind_max_ms": 20.87,
+      "pressure_min_hpa": 998.55,
+      "wave_coverage_pct": 100
+    },
+    {
+      "event": "Winter front (2023-12-17)",
+      "buoy": "SS-B02",
+      "wave_max_m": 3.75,
+      "wind_max_ms": null,
+      "pressure_min_hpa": null,
+      "wave_coverage_pct": 100
+    },
+    {
+      "event": "Winter front (2023-12-17)",
+      "buoy": "SS-B03",
+      "wave_max_m": 4.97,
+      "wind_max_ms": null,
+      "pressure_min_hpa": null,
+      "wave_coverage_pct": 100
+    },
+    {
+      "event": "Winter front (2023-12-17)",
+      "buoy": "SS-B04",
+      "wave_max_m": null,
+      "wind_max_ms": 13.95,
+      "pressure_min_hpa": 999.2,
+      "wave_coverage_pct": 0
+    },
+    {
+      "event": "Debby (2024-08-04)",
+      "buoy": "SS-B01",
+      "wave_max_m": 4.38,
+      "wind_max_ms": 19.73,
+      "pressure_min_hpa": 997.8,
+      "wave_coverage_pct": 100
+    },
+    {
+      "event": "Debby (2024-08-04)",
+      "buoy": "SS-B02",
+      "wave_max_m": 3.17,
+      "wind_max_ms": null,
+      "pressure_min_hpa": null,
+      "wave_coverage_pct": 100
+    },
+    {
+      "event": "Debby (2024-08-04)",
+      "buoy": "SS-B03",
+      "wave_max_m": 4.27,
+      "wind_max_ms": null,
+      "pressure_min_hpa": null,
+      "wave_coverage_pct": 100
+    },
+    {
+      "event": "Debby (2024-08-04)",
+      "buoy": "SS-B04",
+      "wave_max_m": null,
+      "wind_max_ms": 19.5,
+      "pressure_min_hpa": 1004.75,
+      "wave_coverage_pct": 0
+    },
+    {
+      "event": "Helene (2024-09-26)",
+      "buoy": "SS-B01",
+      "wave_max_m": 7.58,
+      "wind_max_ms": 28.15,
+      "pressure_min_hpa": 953.58,
+      "wave_coverage_pct": 100
+    },
+    {
+      "event": "Helene (2024-09-26)",
+      "buoy": "SS-B02",
+      "wave_max_m": 8.76,
+      "wind_max_ms": null,
+      "pressure_min_hpa": null,
+      "wave_coverage_pct": 100
+    },
+    {
+      "event": "Helene (2024-09-26)",
+      "buoy": "SS-B03",
+      "wave_max_m": null,
+      "wind_max_ms": null,
+      "pressure_min_hpa": null,
+      "wave_coverage_pct": 0
+    },
+    {
+      "event": "Helene (2024-09-26)",
+      "buoy": "SS-B04",
+      "wave_max_m": null,
+      "wind_max_ms": 23.3,
+      "pressure_min_hpa": 991.6,
+      "wave_coverage_pct": 0
+    },
+    {
+      "event": "Milton (2024-10-09)",
+      "buoy": "SS-B01",
+      "wave_max_m": 5.48,
+      "wind_max_ms": 19.75,
+      "pressure_min_hpa": 998.8,
+      "wave_coverage_pct": 100
+    },
+    {
+      "event": "Milton (2024-10-09)",
+      "buoy": "SS-B02",
+      "wave_max_m": 8.12,
+      "wind_max_ms": null,
+      "pressure_min_hpa": null,
+      "wave_coverage_pct": 62
+    },
+    {
+      "event": "Milton (2024-10-09)",
+      "buoy": "SS-B03",
+      "wave_max_m": null,
+      "wind_max_ms": null,
+      "pressure_min_hpa": null,
+      "wave_coverage_pct": 0
+    },
+    {
+      "event": "Milton (2024-10-09)",
+      "buoy": "SS-B04",
+      "wave_max_m": null,
+      "wind_max_ms": 16.45,
+      "pressure_min_hpa": 993.2,
+      "wave_coverage_pct": 0
+    }
+  ],
+  "physics_heuristics_on_real_data": {
+    "SS-B01": {
+      "hours_checked": 26287,
+      "flagged": 0,
+      "flagged_pct": 0.0,
+      "examples": []
+    },
+    "SS-B02": {
+      "hours_checked": 19424,
+      "flagged": 0,
+      "flagged_pct": 0.0,
+      "examples": []
+    },
+    "SS-B03": {
+      "hours_checked": 23242,
+      "flagged": 0,
+      "flagged_pct": 0.0,
+      "examples": []
+    },
+    "SS-B04": {
+      "hours_checked": 25505,
+      "flagged": 0,
+      "flagged_pct": 0.0,
+      "examples": []
+    }
+  },
+  "split": {
+    "train": {
+      "from": "2023-01-01",
+      "to": "2023-12-31",
+      "events": [
+        "Idalia (2023-08-30)",
+        "Winter front (2023-12-17)"
+      ],
+      "hours_with_waves_SS-B01": 8748
+    },
+    "validation": {
+      "from": "2024-01-01",
+      "to": "2024-06-30",
+      "events": [],
+      "hours_with_waves_SS-B01": 4368
+    },
+    "test": {
+      "from": "2024-07-01",
+      "to": "2025-12-31",
+      "events": [
+        "Debby (2024-08-04)",
+        "Helene (2024-09-26)",
+        "Milton (2024-10-09)"
+      ],
+      "hours_with_waves_SS-B01": 13155
+    }
+  }
+}

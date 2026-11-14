@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS buoys (
     ndbc_station  TEXT,
     lat           DOUBLE PRECISION,
     lon           DOUBLE PRECISION,
+    sensors       TEXT[] NOT NULL DEFAULT '{}',  -- fields this station reports
     registered_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 

@@ -64,7 +64,7 @@ docker compose up -d --build
 | Phase | Status |
 |---|---|
 | 0 · Design + environment + repo | ✅ done ([report](docs/PHASE_0.md)) |
-| 1 · NOAA data | ⏳ next: pick buoy cluster, download, clean |
+| 1 · NOAA data | ✅ done: West Florida cluster, 3 years, real hurricanes ([report](docs/PHASE_1.md), [data notes](docs/data-notes.md)) |
 | 2 · Simulator + MQTT | 🟡 buoy + signing done, replay source TODO |
 | 3 · Crypto gate | ✅ implemented + tested |
 | 4 · Unprotected baseline | ✅ implemented |

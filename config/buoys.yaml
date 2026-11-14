@@ -1,24 +1,31 @@
-# Virtual buoy network.
-# Phase 1: map each buoy to a real NOAA NDBC station (a cluster of nearby
-# stations whose history includes a real recorded storm) and fill in lat/lon.
+# SeaShield virtual buoy network: West Florida Shelf, eastern Gulf of Mexico.
+# Each virtual buoy replays a real NOAA NDBC station (positions from the NDBC
+# station table). Chosen in Phase 1, see docs/data-notes.md and docs/PHASE_1.md.
+#
+# The network is heterogeneous on purpose (as in reality): not every buoy
+# measures everything. `sensors` lists the SeaShield fields the station reports.
 buoys:
   - buoy_id: SS-B01
-    name: Buoy Alpha
-    ndbc_station: null   # TODO Phase 1
-    lat: null
-    lon: null
+    name: West Tampa
+    ndbc_station: "42036"
+    lat: 28.500
+    lon: -84.505
+    sensors: [wave_height_m, dominant_period_s, wind_speed_ms, wind_dir_deg, pressure_hpa, water_temp_c]
   - buoy_id: SS-B02
-    name: Buoy Bravo
-    ndbc_station: null
-    lat: null
-    lon: null
+    name: Pulley Ridge
+    ndbc_station: "42097"
+    lat: 25.704
+    lon: -83.654
+    sensors: [wave_height_m, dominant_period_s, water_temp_c]
   - buoy_id: SS-B03
-    name: Buoy Charlie
-    ndbc_station: null
-    lat: null
-    lon: null
+    name: Offshore St. Petersburg
+    ndbc_station: "42099"
+    lat: 27.352
+    lon: -84.275
+    sensors: [wave_height_m, dominant_period_s, water_temp_c]
   - buoy_id: SS-B04
-    name: Buoy Delta
-    ndbc_station: null
-    lat: null
-    lon: null
+    name: WFS Central C10
+    ndbc_station: "42013"
+    lat: 27.173
+    lon: -82.924
+    sensors: [wind_speed_ms, wind_dir_deg, pressure_hpa, water_temp_c]
