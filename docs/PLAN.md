@@ -36,7 +36,8 @@ Every phase has the same structure:
 | Crypto gate (signature, seq, timestamp, nonce) | ✅ Written |
 | Physics checks, fusion rules, unprotected baseline | ✅ Written (thresholds are initial heuristics) |
 | Attack scenarios (tamper, replay, spike, wind, suppress, drift) | ✅ Written as functions |
-| Tests (signing, crypto gate, physics, pipeline) | ✅ Written, **not run yet** |
+| Tests (signing, crypto gate, physics, pipeline, API) | ✅ **23 passing** (Phase 0, see [`PHASE_0.md`](PHASE_0.md)) |
+| Environment, git, private repo `hackathon-sea` | ✅ Phase 0 done |
 | NOAA data, simulator replay, ML model, spatial check | ⬜ Skeleton only |
 | API persistence, WebSocket feed, dashboard pages | ⬜ Skeleton only |
 | Vultr deployment | ⬜ Not started (no resource created, $0 spent) |
@@ -539,7 +540,7 @@ back what happened.
 
 ## 15. Master checklist
 
-- [ ] Phase 0: environment works, tests green, first commit, private repo
+- [x] Phase 0: environment works, tests green, first commit, private repo → [`PHASE_0.md`](PHASE_0.md)
 - [ ] Phase 1: buoy cluster chosen, data cleaned, storm identified, split defined
 - [ ] Phase 2: simulator replays data over MQTT, engine receives
 - [ ] Phase 3: attacker CLI; tamper/replay rejected; spike held
