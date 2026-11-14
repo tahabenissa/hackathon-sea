@@ -22,7 +22,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.2", "ruff>=0.5"]
+dev = ["pytest>=8.2", "ruff>=0.5", "amqtt>=0.12"]  # amqtt: local MQTT broker without Docker
 ml = ["matplotlib>=3.9"]
 
 [build-system]

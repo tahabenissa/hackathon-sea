@@ -34,12 +34,13 @@ Every phase has the same structure:
 | Folder structure + config files + Docker Compose | ✅ Done |
 | Message schema, HMAC signing, buoy registry | ✅ Written |
 | Crypto gate (signature, seq, timestamp, nonce) | ✅ Written |
-| Physics checks, fusion rules, unprotected baseline | ✅ Written (thresholds are initial heuristics) |
+| Physics checks, fusion rules, unprotected baseline | ✅ Written; physics uses `observed_at` + per-hour limits from real data (Phase 2) |
 | Attack scenarios (tamper, replay, spike, wind, suppress, drift) | ✅ Written as functions |
-| Tests (signing, crypto gate, physics, pipeline, API) | ✅ **23 passing** (Phase 0, see [`PHASE_0.md`](PHASE_0.md)) |
+| Tests (signing, crypto gate, physics, pipeline, API, clean, replay) | ✅ **41 passing** |
 | Environment, git, private repo `hackathon-sea` | ✅ Phase 0 done |
 | NOAA data: cluster 42036/42097/42099/42013, cleaned, storms found, split defined | ✅ Phase 1 done ([`PHASE_1.md`](PHASE_1.md), [`data-notes.md`](data-notes.md)) |
-| Simulator replay, ML model, spatial check | ⬜ Skeleton only |
+| Simulator replaying NOAA data over MQTT, engine live, operator reset | ✅ Phase 2 done ([`PHASE_2.md`](PHASE_2.md)); Docker blocked locally (VM Platform off) |
+| ML model, spatial check | ⬜ Skeleton only |
 | API persistence, WebSocket feed, dashboard pages | ⬜ Skeleton only |
 | Vultr deployment | ⬜ Not started (no resource created, $0 spent) |
 
@@ -546,7 +547,7 @@ back what happened.
 
 - [x] Phase 0: environment works, tests green, first commit, private repo → [`PHASE_0.md`](PHASE_0.md)
 - [x] Phase 1: buoy cluster chosen, data cleaned, storm identified, split defined → [`PHASE_1.md`](PHASE_1.md)
-- [ ] Phase 2: simulator replays data over MQTT, engine receives
+- [x] Phase 2: simulator replays data over MQTT, engine receives → [`PHASE_2.md`](PHASE_2.md)
 - [ ] Phase 3: attacker CLI; tamper/replay rejected; spike held
 - [ ] Phase 4: unprotected vs SeaShield recorded side by side
 - [ ] Phase 5: physics calibrated, AI trained, spatial done, fusion tested

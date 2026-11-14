@@ -16,8 +16,11 @@ services:
     restart: unless-stopped
     volumes:
       - ./infra/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
-    # Dev: broker only reachable inside the compose network.
-    # Prod (Phase 9): switch to mosquitto.prod.conf and publish 8883 (TLS).
+    ports:
+      # Dev: reachable from THIS machine only (127.0.0.1), never from the network,
+      # so the engine/simulator can also run natively (SEASHIELD_MQTT_HOST=localhost).
+      - "127.0.0.1:1883:1883"
+    # Prod (Phase 9): switch to mosquitto.prod.conf and publish 8883 (TLS) instead.
 
   postgres:
     image: postgres:16

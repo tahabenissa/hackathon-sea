@@ -1,0 +1,11 @@
+# Local DEV broker without Docker (pure Python, `pip install -e ".[dev]"`):
+#   amqtt -c infra/dev/amqtt.yaml
+# Listens on 127.0.0.1 only. Production always uses Mosquitto (docker-compose.yml).
+---
+listeners:
+  default:
+    type: tcp
+    bind: 127.0.0.1:1883
+plugins:
+  amqtt.plugins.authentication.AnonymousAuthPlugin:
+    allow_anonymous: true

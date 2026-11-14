@@ -143,6 +143,10 @@ for later phases:
    Real hourly changes above 0.3 m would then be flagged: **276 hours at SS-B01 (1.05 %), 145 at
    SS-B02 (0.75 %), 162 at SS-B03 (0.70 %)**, concentrated in storms.
 
+**Update (Phase 2, done):** `observed_at` added; limits are now per hour (wave 3.5 m/h,
+wind 15 m/s/h, pressure 20 hPa/h, water temp 3 °C/h). Re-run on the same real data:
+**0 of 94,458 hours flagged**, and a 1.5 → 9.0 m hourly jump is caught. See `PHASE_2.md`.
+
 **Decision:** add a signed **`observed_at`** field (measurement time) to the message in Phase 2;
 physics rates use `observed_at`, while replay protection keeps using `ts`. Recalibrate the rate
 limits **per hour** in Phase 5.1 using the table in section 5.

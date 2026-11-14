@@ -38,10 +38,19 @@ data/ models/ secrets/  git-ignored (generated locally)
 ```bash
 python -m venv .venv
 .venv\Scripts\activate            # Windows  (Linux/macOS: source .venv/bin/activate)
-pip install -e ".[dev]"
+pip install -e ".[dev,ml]"
 python infra/scripts/gen_buoy_keys.py   # creates secrets/buoy_keys.json
 pytest                                  # run the test suite
 uvicorn seashield.api.main:app --reload # API docs at http://localhost:8000/api/docs
+```
+
+Live buoy network (3 terminals, no Docker needed; data from `ml/` scripts, see [Phase 1](docs/PHASE_1.md)):
+
+```powershell
+amqtt -c infra/dev/amqtt.yaml                                   # 1. local MQTT broker
+$env:SEASHIELD_MQTT_HOST="localhost"; python -m seashield.engine # 2. security engine
+$env:SEASHIELD_MQTT_HOST="localhost"                             # 3. replay Hurricane Helene
+python -m seashield.simulator --start 2024-09-25T12:00 --end 2024-09-27T12:00 --interval 1
 ```
 
 Dashboard (dev):
@@ -65,7 +74,7 @@ docker compose up -d --build
 |---|---|
 | 0 · Design + environment + repo | ✅ done ([report](docs/PHASE_0.md)) |
 | 1 · NOAA data | ✅ done: West Florida cluster, 3 years, real hurricanes ([report](docs/PHASE_1.md), [data notes](docs/data-notes.md)) |
-| 2 · Simulator + MQTT | 🟡 buoy + signing done, replay source TODO |
+| 2 · Simulator + MQTT | ✅ done: real NOAA replay over MQTT, 233/233 live messages assessed ([report](docs/PHASE_2.md)) |
 | 3 · Crypto gate | ✅ implemented + tested |
 | 4 · Unprotected baseline | ✅ implemented |
 | 5 · Physics / AI / neighbours | 🟡 physics + fusion done, AI + spatial TODO |

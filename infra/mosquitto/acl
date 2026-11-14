@@ -1,7 +1,14 @@
 # Each buoy may only publish to its own topic (%u = username = buoy_id).
 pattern write seashield/buoys/%u/telemetry
 
-# The security engine reads every buoy and publishes verdicts.
+# The security engine reads every buoy and the operator controls, publishes verdicts.
 user engine
 topic read seashield/buoys/#
+topic read seashield/control/#
 topic write seashield/verdicts/#
+
+# Only the operator (monitoring centre / demo console) may send control commands
+# such as seashield/control/reset. Buoys can NEVER reset the engine's memory.
+user operator
+topic write seashield/control/#
+topic read seashield/verdicts/#

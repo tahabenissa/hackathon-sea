@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     mqtt_password: str | None = None
     topic_telemetry: str = "seashield/buoys/{buoy_id}/telemetry"
     topic_verdicts: str = "seashield/verdicts/{buoy_id}"
+    topic_control_reset: str = "seashield/control/reset"  # operator only (see infra/mosquitto/acl)
 
     # Database
     database_url: str = "postgresql+psycopg://seashield:change-me@localhost:5432/seashield"

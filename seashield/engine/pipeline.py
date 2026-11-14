@@ -15,10 +15,19 @@ from seashield.engine.spatial import SpatialChecker
 
 class SecurityPipeline:
     def __init__(self, keys: dict[str, bytes], buoys: list[Buoy], replay_window_s: int = 120) -> None:
+        self._buoys = buoys
         self.crypto = CryptoGate(keys, window_s=replay_window_s)
         self.physics = PhysicsChecker()
         self.anomaly = AnomalyDetector()
         self.spatial = SpatialChecker(buoys)
+
+    def reset_history(self) -> None:
+        """Operator action: forget per-buoy physical history (new replay scenario, maintenance).
+
+        Replay protection (crypto gate sequence numbers and nonces) is deliberately KEPT.
+        """
+        self.physics = PhysicsChecker()
+        self.spatial = SpatialChecker(self._buoys)
 
     def process(self, raw: dict[str, Any]) -> Assessment:
         buoy_id = str(raw.get("buoy_id"))
@@ -37,13 +46,13 @@ class SecurityPipeline:
 
         evidence = [
             crypto_ev,
-            self.physics.check(msg.buoy_id, msg.ts, msg.data),
+            self.physics.check(msg.buoy_id, msg.observed_at, msg.data, sent_at=msg.ts),
             self.anomaly.check(msg.buoy_id, msg.data),
-            self.spatial.check(msg.buoy_id, msg.ts, msg.data),
+            self.spatial.check(msg.buoy_id, msg.observed_at, msg.data),
         ]
         result = fuse(msg.buoy_id, msg.seq, msg.data, evidence)
 
         # Only trusted readings become references for neighbouring buoys.
         if result.verdict in (Verdict.TRUSTED, Verdict.CONFIRMED_EVENT):
-            self.spatial.update(msg.buoy_id, msg.ts, msg.data)
+            self.spatial.update(msg.buoy_id, msg.observed_at, msg.data)
         return result

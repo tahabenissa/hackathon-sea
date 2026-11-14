@@ -9,6 +9,20 @@
 | T5 | Slow drift | No | Temporal model / CUSUM (stretch) | TODO |
 | T6 | Coordinated multi-buoy lie | No | Partially: physics + distant references | Known limitation |
 
+## Notes added in Phase 2
+
+- **Forged measurement time.** A compromised buoy (T4) can sign any `observed_at`, e.g. to
+  make a jump look slow. Mitigations: `observed_at` must increase per buoy, may not be later
+  than the send time + 120 s, and rates are limited per hour of observation time (a longer
+  claimed gap means skipped reports, which neighbours and the dashboard can see).
+  Tests: `test_observation_time_going_backwards_flagged`, `test_observation_in_the_future_flagged`.
+- **Engine memory reset.** Clearing the physics history (`seashield/control/reset`) is an
+  **operator** action. Buoys can never trigger it (Mosquitto ACL: only `operator` may write
+  `seashield/control/#`), and replay protection is kept across a reset.
+  Test: `test_operator_reset_clears_history_but_keeps_replay_protection`.
+- **Offline neighbours.** Storms knock buoys offline (Phase 1 data). Missing data must count as
+  "no opinion", never "calm"; otherwise an attacker could exploit outages.
+
 **Out of scope (MVP):** link jamming / DoS, physical sensor tampering, attacks on the
 monitoring centre itself.
 

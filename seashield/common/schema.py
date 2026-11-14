@@ -22,11 +22,18 @@ class Telemetry(BaseModel):
 
     `sig` = hex HMAC-SHA256 over the canonical JSON of every other field
     (see seashield.common.signing).
+
+    Two clocks, two jobs (decision 0003):
+      - `ts`          = when the message was SENT  -> replay protection (crypto gate)
+      - `observed_at` = when the sea was MEASURED  -> physics rate checks
+    In live operation they are seconds apart; in replay mode `observed_at` is the
+    historical NOAA timestamp while `ts` is "now".
     """
 
     buoy_id: str
     seq: int = Field(ge=0, description="Monotonic per-buoy sequence number")
     ts: datetime = Field(description="Send time, UTC")
+    observed_at: datetime = Field(description="Measurement time, UTC")
     nonce: str = Field(description="Random value, unique per message")
     data: Measurements
     sig: str = ""
