@@ -1,0 +1,56 @@
+/* SeaShield theme: deep ocean navy, cyan accents, verdict colours. */
+:root {
+  --bg: #071a2c;
+  --bg-elev: #0d2740;
+  --bg-card: #12314f;
+  --line: #1f4a70;
+  --text: #e6f1fb;
+  --muted: #8fb0cc;
+  --accent: #38bdf8;
+  --trusted: #22c55e;
+  --held: #f59e0b;
+  --threat: #ef4444;
+  --event: #a78bfa;
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: var(--text);
+  background: var(--bg);
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); }
+h1 { margin: 0 0 0.5rem; font-size: 1.6rem; }
+h3 { margin: 0 0 0.4rem; font-size: 0.85rem; color: var(--muted); font-weight: 500; }
+.muted { color: var(--muted); }
+
+.shell { display: flex; min-height: 100vh; }
+.sidebar {
+  width: 240px; flex-shrink: 0; padding: 1.5rem 1rem;
+  background: linear-gradient(180deg, var(--bg-elev), var(--bg));
+  border-right: 1px solid var(--line);
+}
+.brand { font-size: 1.3rem; font-weight: 700; margin-bottom: 2rem; }
+.brand span { color: var(--accent); }
+.sidebar nav { display: flex; flex-direction: column; gap: 0.25rem; }
+.sidebar a {
+  color: var(--muted); text-decoration: none; padding: 0.55rem 0.75rem; border-radius: 8px;
+}
+.sidebar a:hover { color: var(--text); background: var(--bg-card); }
+.sidebar a.active { color: var(--text); background: var(--bg-card); box-shadow: inset 3px 0 var(--accent); }
+
+.content { flex: 1; padding: 2rem; min-width: 0; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1.5rem; }
+.card { background: var(--bg-card); border: 1px solid var(--line); border-radius: 12px; padding: 1rem 1.25rem; }
+
+.badge { padding: 0.15rem 0.6rem; border-radius: 999px; font-size: 0.8rem; font-weight: 600; }
+.badge-trusted { background: color-mix(in srgb, var(--trusted) 20%, transparent); color: var(--trusted); }
+.badge-rejected,
+.badge-suspected_fdi { background: color-mix(in srgb, var(--threat) 20%, transparent); color: var(--threat); }
+.badge-suppressed_warning { background: color-mix(in srgb, var(--held) 20%, transparent); color: var(--held); }
+.badge-confirmed_event { background: color-mix(in srgb, var(--event) 20%, transparent); color: var(--event); }
+
+@media (max-width: 760px) {
+  .shell { flex-direction: column; }
+  .sidebar { width: 100%; padding: 1rem; }
+  .sidebar nav { flex-direction: row; flex-wrap: wrap; }
+  .content { padding: 1rem; }
+}

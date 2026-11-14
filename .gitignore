@@ -1,0 +1,31 @@
+# Secrets: never commit
+.env
+secrets/*
+!secrets/.gitkeep
+infra/mosquitto/passwd
+infra/mosquitto/certs/
+
+# Data and models (large / regenerable)
+data/raw/*
+data/processed/*
+!data/**/.gitkeep
+models/*
+!models/.gitkeep
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# Node
+node_modules/
+dashboard/dist/
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

@@ -1,0 +1,10 @@
+.git
+.venv
+.env
+secrets
+data
+dashboard/node_modules
+dashboard/dist
+**/__pycache__
+*.png
+*.webp

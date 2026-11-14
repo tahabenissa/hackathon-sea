@@ -1,0 +1,7 @@
+# Each buoy may only publish to its own topic (%u = username = buoy_id).
+pattern write seashield/buoys/%u/telemetry
+
+# The security engine reads every buoy and publishes verdicts.
+user engine
+topic read seashield/buoys/#
+topic write seashield/verdicts/#

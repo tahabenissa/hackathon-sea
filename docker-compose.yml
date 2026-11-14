@@ -1,0 +1,74 @@
+# SeaShield AI: full stack on one host (local dev or one Vultr VPS).
+#   docker compose up -d --build                 # core stack
+#   docker compose --profile demo up -d attacker # + attack console service
+name: seashield
+
+x-python: &python
+  build: .
+  env_file: .env
+  restart: unless-stopped
+  volumes:
+    - ./secrets:/app/secrets:ro
+
+services:
+  mosquitto:
+    image: eclipse-mosquitto:2
+    restart: unless-stopped
+    volumes:
+      - ./infra/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+    # Dev: broker only reachable inside the compose network.
+    # Prod (Phase 9): switch to mosquitto.prod.conf and publish 8883 (TLS).
+
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./infra/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
+      interval: 5s
+      retries: 10
+
+  api:
+    <<: *python
+    command: uvicorn seashield.api.main:app --host 0.0.0.0 --port 8000
+    depends_on:
+      postgres: { condition: service_healthy }
+
+  engine:
+    <<: *python
+    command: python -m seashield.engine
+    depends_on: [mosquitto, api]
+
+  simulator:
+    <<: *python
+    command: python -m seashield.simulator
+    volumes:
+      - ./secrets:/app/secrets:ro
+      - ./data:/app/data:ro
+    depends_on: [mosquitto]
+
+  attacker:
+    <<: *python
+    command: python -m seashield.attacker --serve
+    profiles: ["demo"]
+    depends_on: [mosquitto]
+
+  web:
+    build:
+      context: .
+      dockerfile: dashboard/Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - caddy_data:/data
+    depends_on: [api]
+
+volumes:
+  pgdata:
+  caddy_data:
