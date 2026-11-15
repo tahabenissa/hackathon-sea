@@ -26,8 +26,9 @@ export default function BuoyMap({ buoys, latest, offline }: Props) {
   return (
     <MapContainer center={[27.2, -83.8]} zoom={6} scrollWheelZoom={false} className="map">
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>'
-        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+        attribution="Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ"
+        url="https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}"
+        maxZoom={16}
       />
       {placed.map((b) => {
         const e = latest[b.buoy_id];
