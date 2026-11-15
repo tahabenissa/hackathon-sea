@@ -30,7 +30,7 @@ Python 3.12 (pydantic v2, pydantic-settings, paho-mqtt v2, FastAPI, SQLAlchemy 2
 - Full stack: `cp .env.example .env` → `docker compose up -d --build` (attacker: `--profile demo`)
 
 ## File map
-- `README.md`: submission landing page for judges (live URL, problem, try-it flow, screenshots in docs/assets/screenshots/, Mermaid architecture, limitations); rewritten 2026-11-15; links docs/PHASE_5_SPATIAL.md; clone URL needs the repo public
+- `README.md`: submission landing page for judges (live URL, problem, try-it flow, screenshots in docs/assets/screenshots/ (dashboard, helene-storm, attack-spike, attack-tamper: taken from the live site, committed 00f4f4c), Mermaid architecture, limitations); rewritten 2026-11-15; links docs/PHASE_5_SPATIAL.md; clone URL needs the repo public
 - `SEASHIELD_AI_MASTER_PROMPT.md`: master spec (threat model, architecture, scenarios, Vultr plan)
 - `docs/PLAN.md`: opens with the **DEADLINE PLAN (15 Nov)**: deliverables status, steps D1–D10 (D1–D2 done; D3 Vultr server + D4 public repo = user), demo video script, honest limitations; then phases 0–10 as the post-hackathon roadmap, risks, checklist
 - `docs/PHASE_0.md`, `PHASE_1.md`, `PHASE_2.md`, `PHASE_D6.md` (AI layer results), `PHASE_5_SPATIAL.md` (neighbour check: method, measured tolerances, Helene results, limits): phase reports (what was done, results)
@@ -69,7 +69,7 @@ Python 3.12 (pydantic v2, pydantic-settings, paho-mqtt v2, FastAPI, SQLAlchemy 2
 ## Deadline mode (2026-11-15)
 - The 10-phase plan is cut to what the submission needs. Built: live demo (commit 1c6cf9e): engine events (`engine/events.py`: unprotected vs SeaShield alert: ISSUED/HELD/BLOCKED/REVIEW/ESCALATED), API live hub (`api/live.py`: MQTT→WS, /api/events, /api/stats, POST /api/attacks/{spike|suppress|tamper|replay}, 2 s rate limit), single-page dashboard (map, two centres, attack console, wave chart, feed, how-it-works), simulator `--loop`, compose without Postgres (profile db).
 - Deploy: `bash infra/scripts/deploy_vultr.sh <IP> [domain]` (SSH key ~/.ssh/seashield_vultr, default domain <ip-dashes>.sslip.io, keys + .env generated on the server). Waiting on the user for the server IP + deadline time.
-- The repo is PUBLIC (made public by the user on 2026-11-15; verified anonymously, HTTP 200).
+- The repo is PUBLIC (made public by the user on 2026-11-15). Demo video DONE: `video/SeaShield_AI_demo.mp4` (2:36, Supertonic voice, -16 LUFS) + `video/html/` (standalone player); source film in D:/study 2eme/repovedamine/wordcue/films/seashield-demo-st (Qwen-voice version in films/seashield-demo). Remaining: sharing (3+ countries), Vultr Community submission.
 - Honest finding: "suppress" in calm weather is undetectable (plausible); it is caught only during a storm.
 - D6 done (commit 9a2bb67, docs/PHASE_D6.md): per-buoy Isolation Forest (`ml/train.py` → models/isolation_forest.joblib, git-ignored, shipped by the deploy script; features in `seashield/engine/features.py`; sklearn pinned to 1.9.1). Validation: physics 0 FP / ~75% on +4..+7.5 m fakes; AI 6 FP / 1.4%. AI deciding alone held 34/137 genuine Helene readings → `fusion.AI_DECIDES=False` (advisory, shown in explanations). Fusion now uses max evidence, not a weighted average. Test part run once (10 min 42 s): physics 0 FP of 44,024 (871 storm readings), wave buoys 265/265 at +4/+7.5 m; AI 45 FP all inside hurricane windows (see docs/evaluation.md). Caveat: the physics pressure limit came from Helene (test period).
 
