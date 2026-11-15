@@ -1,20 +1,23 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
+
+from seashield.api.live import SCENARIOS, hub
 
 router = APIRouter(tags=["attack simulation"])
 
-SCENARIOS = ["tamper", "replay", "spike", "false_wind", "suppress", "drift"]
-
 
 @router.get("/attacks/scenarios")
-def scenarios() -> list[str]:
+def scenarios() -> dict[str, dict[str, str]]:
     return SCENARIOS
 
 
 @router.post("/attacks/{scenario}")
 def launch(scenario: str, buoy_id: str = "SS-B01") -> dict:
-    """Trigger a SIMULATED attack from the dashboard's attack console.
-
-    TODO Phase 8: forward to the attacker service; protect this endpoint
-    (demo token) so strangers cannot trigger attacks on the public URL.
-    """
-    return {"scenario": scenario, "buoy_id": buoy_id, "launched": False}
+    """Launch a SIMULATED attack on the live demo network (rate-limited)."""
+    try:
+        return hub.launch(scenario, buoy_id)
+    except ValueError as exc:
+        raise HTTPException(404, str(exc)) from exc
+    except RuntimeError as exc:
+        raise HTTPException(429, str(exc)) from exc
+    except LookupError as exc:
+        raise HTTPException(409, str(exc)) from exc

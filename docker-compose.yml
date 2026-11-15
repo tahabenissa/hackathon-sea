@@ -1,6 +1,6 @@
 # SeaShield AI: full stack on one host (local dev or one Vultr VPS).
-#   docker compose up -d --build                 # core stack
-#   docker compose --profile demo up -d attacker # + attack console service
+#   docker compose up -d --build              # live demo stack
+#   docker compose --profile db up -d         # + PostgreSQL (persistence, not used by the demo yet)
 name: seashield
 
 x-python: &python
@@ -17,47 +17,30 @@ services:
     volumes:
       - ./infra/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
     ports:
-      # Dev: reachable from THIS machine only (127.0.0.1), never from the network,
-      # so the engine/simulator can also run natively (SEASHIELD_MQTT_HOST=localhost).
+      # Reachable from THIS machine only (127.0.0.1), never from the internet.
       - "127.0.0.1:1883:1883"
-    # Prod (Phase 9): switch to mosquitto.prod.conf and publish 8883 (TLS) instead.
-
-  postgres:
-    image: postgres:16
-    restart: unless-stopped
-    env_file: .env
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-      - ./infra/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
-      interval: 5s
-      retries: 10
-
-  api:
-    <<: *python
-    command: uvicorn seashield.api.main:app --host 0.0.0.0 --port 8000
-    depends_on:
-      postgres: { condition: service_healthy }
+    # Remote buoys (later): mosquitto.prod.conf with TLS on 8883 + per-buoy credentials.
 
   engine:
     <<: *python
     command: python -m seashield.engine
-    depends_on: [mosquitto, api]
+    depends_on: [mosquitto]
+
+  api:
+    <<: *python
+    command: uvicorn seashield.api.main:app --host 0.0.0.0 --port 8000 --proxy-headers
+    depends_on: [mosquitto]
 
   simulator:
     <<: *python
-    command: python -m seashield.simulator
+    # Live demo: real NOAA data, calm days then Hurricane Helene (Sept 2024), looping forever.
+    # 1 historical hour every 2 s -> one loop of 5 days takes ~4 minutes.
+    command: >
+      python -m seashield.simulator --start 2024-09-23T00:00 --end 2024-09-28T00:00 --interval 2 --loop
     volumes:
       - ./secrets:/app/secrets:ro
       - ./data:/app/data:ro
-    depends_on: [mosquitto]
-
-  attacker:
-    <<: *python
-    command: python -m seashield.attacker --serve
-    profiles: ["demo"]
-    depends_on: [mosquitto]
+    depends_on: [mosquitto, engine]
 
   web:
     build:
@@ -71,6 +54,15 @@ services:
     volumes:
       - caddy_data:/data
     depends_on: [api]
+
+  postgres:
+    image: postgres:16
+    profiles: ["db"]
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./infra/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
 
 volumes:
   pgdata:

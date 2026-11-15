@@ -11,6 +11,7 @@ from seashield.common.mqtt import connect_with_retry, make_client
 from seashield.common.registry import load_buoys, load_keys
 from seashield.config import get_settings
 from seashield.engine.baseline import naive_alert
+from seashield.engine.events import build_event
 from seashield.engine.pipeline import SecurityPipeline
 
 log = logging.getLogger("seashield.engine")
@@ -44,11 +45,11 @@ def main() -> None:
         result = pipeline.process(raw)
         verdicts[result.verdict.value] += 1
         baseline_alerts += unprotected is not None
-        log.info("%s seq=%s obs=%s verdict=%s risk=%.2f | unprotected_alert=%s | %s",
-                 result.buoy_id, result.seq, raw.get("observed_at"), result.verdict, result.risk,
-                 unprotected, result.explanation)
-        client.publish(s.topic_verdicts.format(buoy_id=result.buoy_id), result.model_dump_json(),
-                       qos=1)
+        event = build_event(raw, result, unprotected)
+        log.info("%s seq=%s obs=%s verdict=%s risk=%.2f | unprotected=%s seashield=%s | %s",
+                 result.buoy_id, result.seq, raw.get("observed_at"), result.verdict.value,
+                 result.risk, unprotected, event["seashield_alert"], result.explanation)
+        client.publish(s.topic_verdicts.format(buoy_id=result.buoy_id), json.dumps(event), qos=1)
         total = sum(verdicts.values())
         if total % 50 == 0:
             log.info("TOTALS after %d messages: %s | unprotected alerts: %d",

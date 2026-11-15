@@ -3,12 +3,18 @@
 > Maintained by the project-memory skill and loaded at every session start.
 > Read this first; open other files only when a task needs them.
 
-**Last updated:** 2026-11-14 (Phase 2 complete)
+**Last updated:** 2026-11-14 (Phase 2 complete, committed 8aa43a8; config.py has `topic_control_reset`; amqtt is in the dev extras)
 **Repo:** https://github.com/tahabenissa/hackathon-sea (private, branch main)
 **Root:** D:\hackthon_sea
 
 ## What this project is
 SeaShield AI is a HackGlobal 2026 hackathon project (theme: Artificial Intelligence). It is a "trust engine" that detects False Data Injection (FDI) attacks on ocean-buoy data before that data can trigger or suppress maritime alerts. It has four layers: a crypto gate (HMAC, seq, timestamp, nonce), physics checks, ML anomaly detection (Isolation Forest), and cross-buoy validation, all feeding a fusion verdict. Deployment target: Vultr, with $200 in credits (hard budget). The user wants an ambitious, high-quality project.
+
+## Hackathon requirements (from the user, 2026-11-15)
+- **Submissions close 15 November 2026** (on Vultr Community). Exact hour/timezone: ask the user.
+- Tracks: Agentic/GenAI, Multimodal/accessibility, Grounded knowledge/RAG, **Civic and real-world impact** (best fit for SeaShield: a "misinformation checker" for ocean sensors that protects coastal communities).
+- Deliverables: PUBLIC GitHub repo with setup + docs; backend on a Vultr Compute instance; recorded demo video running on Vultr; PUBLIC demo URL with a product-style experience; use case + system design with diagrams and screenshots of the user flow.
+- Judging: Merit (idea, build, fit) · Reach (real users, shares, votes; talk to users in 3+ countries) · Bonus (cross-university teams, community challenges).
 
 ## Stack and tools
 Python 3.12 (pydantic v2, pydantic-settings, paho-mqtt v2, FastAPI, SQLAlchemy 2, psycopg 3, scikit-learn, pandas 3, pyarrow, httpx; matplotlib in the `ml` extra), Mosquitto 2, PostgreSQL 16, React 18 + Vite 8.3.8 + React Router 7.18.5 + TS + Leaflet + Recharts (npm audit: 0 vulns), Caddy 2 (HTTPS + reverse proxy), Docker Compose. Dev machine: Windows 11 with Python 3.12.10, Node 24, Docker 29 and git installed. Data: NOAA NDBC stdmet.

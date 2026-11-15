@@ -68,6 +68,15 @@ def test_observation_in_the_future_flagged(calm):
     assert not ev.passed and "sent earlier" in ev.detail
 
 
+def test_fake_reading_does_not_poison_the_next_real_one(calm):
+    checker = PhysicsChecker()
+    checker.check("SS-B01", T0, calm)
+    fake = calm.model_copy(update={"wave_height_m": 9.0})
+    assert not checker.check("SS-B01", T0 + timedelta(minutes=30), fake).passed
+    real_next = calm.model_copy(update={"wave_height_m": 1.6})
+    assert checker.check("SS-B01", T0 + timedelta(hours=1), real_next).passed
+
+
 def test_big_waves_without_wind_flagged():
     m = Measurements(wave_height_m=9.0, wind_speed_ms=2.0, dominant_period_s=7.0)
     ev = PhysicsChecker().check("SS-B01", T0, m)

@@ -35,6 +35,8 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--reset", action="store_true",
                    help="DEMO/OPERATOR: ask the engine to forget physical history before a new "
                         "scenario (needed when jumping back in historical time)")
+    p.add_argument("--loop", action="store_true",
+                   help="DEMO: replay the [start, end] window forever (operator reset each round)")
     return p.parse_args()
 
 
@@ -53,26 +55,30 @@ def main() -> None:
     client = make_client(s, client_id="seashield-simulator")
     connect_with_retry(client, s)
     client.loop_start()
-    if args.reset:
-        client.publish(s.topic_control_reset, b"reset", qos=1).wait_for_publish(timeout=5)
-        log.info("operator reset sent to the engine")
-        time.sleep(0.5)
-    log.info("replaying %d buoys from %s, %.1f s per historical hour",
-             len(fleet), args.start or "the beginning", interval)
+    log.info("replaying %d buoys from %s, %.1f s per historical hour%s",
+             len(fleet), args.start or "the beginning", interval, " (looping)" if args.loop else "")
 
-    sent = 0
+    sent, round_no = 0, 0
     try:
-        for hour, tick in enumerate(replay(buoys, args.data_dir, args.start, args.end), start=1):
-            for buoy_id, reading in tick.readings.items():
-                msg = fleet[buoy_id].build_message(reading, observed_at=tick.observed_at)
-                client.publish(s.topic_telemetry.format(buoy_id=buoy_id), json.dumps(msg), qos=1)
-                sent += 1
-            offline = sorted(set(fleet) - set(tick.readings))
-            log.info("%s  sent=%d  offline=%s", tick.observed_at.isoformat(timespec="minutes"),
-                     len(tick.readings), ",".join(offline) or "-")
-            if args.hours and hour >= args.hours:
+        while True:
+            round_no += 1
+            if args.reset or (args.loop and round_no > 1):
+                client.publish(s.topic_control_reset, b"reset", qos=1).wait_for_publish(timeout=5)
+                log.info("operator reset sent to the engine (round %d)", round_no)
+                time.sleep(0.5)
+            for hour, tick in enumerate(replay(buoys, args.data_dir, args.start, args.end), start=1):
+                for buoy_id, reading in tick.readings.items():
+                    msg = fleet[buoy_id].build_message(reading, observed_at=tick.observed_at)
+                    client.publish(s.topic_telemetry.format(buoy_id=buoy_id), json.dumps(msg), qos=1)
+                    sent += 1
+                offline = sorted(set(fleet) - set(tick.readings))
+                log.info("%s  sent=%d  offline=%s", tick.observed_at.isoformat(timespec="minutes"),
+                         len(tick.readings), ",".join(offline) or "-")
+                if args.hours and hour >= args.hours:
+                    break
+                time.sleep(interval)
+            if not args.loop:
                 break
-            time.sleep(interval)
     except KeyboardInterrupt:
         log.info("stopped by user")
     finally:

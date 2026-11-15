@@ -89,11 +89,12 @@ class PhysicsChecker:
                 f"{m.wave_height_m} m waves with only {m.wind_speed_ms} m/s wind and no long swell"
             )
 
-        # Only advance the per-buoy history with a time-consistent reading.
-        if prev is None or observed_at > prev[0]:
-            self._last[buoy_id] = (observed_at, m)
-
         if not problems:
+            # Only a plausible reading becomes the reference for the next one. Otherwise one
+            # fake 9 m reading would make the NEXT real 1.6 m reading look like a jump.
+            # (If a real reading is ever flagged, the allowed change grows with the time
+            # since the last accepted reading, so the history heals by itself.)
+            self._last[buoy_id] = (observed_at, m)
             return Evidence(layer="physics", passed=True, score=0.0, detail="physically consistent")
         score = min(1.0, 0.5 + 0.25 * (len(problems) - 1))
         return Evidence(layer="physics", passed=False, score=score, detail="; ".join(problems))
