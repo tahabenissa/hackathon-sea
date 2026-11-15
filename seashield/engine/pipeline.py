@@ -27,6 +27,7 @@ class SecurityPipeline:
         Replay protection (crypto gate sequence numbers and nonces) is deliberately KEPT.
         """
         self.physics = PhysicsChecker()
+        self.anomaly.reset()
         self.spatial = SpatialChecker(self._buoys)
 
     def process(self, raw: dict[str, Any]) -> Assessment:
@@ -47,12 +48,13 @@ class SecurityPipeline:
         evidence = [
             crypto_ev,
             self.physics.check(msg.buoy_id, msg.observed_at, msg.data, sent_at=msg.ts),
-            self.anomaly.check(msg.buoy_id, msg.data),
+            self.anomaly.check(msg.buoy_id, msg.observed_at, msg.data),
             self.spatial.check(msg.buoy_id, msg.observed_at, msg.data),
         ]
         result = fuse(msg.buoy_id, msg.seq, msg.data, evidence)
 
-        # Only trusted readings become references for neighbouring buoys.
+        # Only accepted readings become references (for the AI and for neighbours).
         if result.verdict in (Verdict.TRUSTED, Verdict.CONFIRMED_EVENT):
+            self.anomaly.commit(msg.buoy_id, msg.observed_at, msg.data)
             self.spatial.update(msg.buoy_id, msg.observed_at, msg.data)
         return result

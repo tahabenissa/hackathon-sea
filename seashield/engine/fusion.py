@@ -12,6 +12,11 @@ from seashield.common.schema import Assessment, Evidence, Measurements, Verdict
 
 WEIGHTS = {"physics": 0.4, "anomaly": 0.35, "spatial": 0.25}
 SUSPICIOUS_RISK = 0.5
+# Can the AI score alone send a reading to review? NO, decided from measurements
+# (docs/PHASE_D6.md): on the real Hurricane Helene replay it would have held 34 of 137
+# genuine readings (Helene was stronger than anything in the 2023 training data), while
+# adding ~0 detection on validation. The AI stays ADVISORY: its score is shown, not obeyed.
+AI_DECIDES = False
 EXTREME_WAVES_M = 6.0
 
 
@@ -28,9 +33,12 @@ def fuse(
     if crypto is not None and not crypto.passed:
         return _assess(buoy_id, seq, Verdict.REJECTED, 1.0, evidence, f"Rejected: {crypto.detail}.")
 
-    scored = [(WEIGHTS[e.layer], e.score) for e in evidence if e.layer in WEIGHTS and e.score is not None]
-    total_w = sum(w for w, _ in scored)
-    risk = sum(w * s for w, s in scored) / total_w if total_w else 0.0
+    # Any ONE strong piece of evidence is enough to send a reading to human review.
+    # (A weighted average let a quiet layer dilute a physics alarm: 0.5 and 0.0 averaged to
+    # 0.27, i.e. "trusted". Weights are kept only to order the evidence.)
+    scored = [e.score for e in evidence
+              if e.layer in WEIGHTS and e.score is not None and (e.layer != "anomaly" or AI_DECIDES)]
+    risk = max(scored, default=0.0)
 
     extreme = m.wave_height_m is not None and m.wave_height_m >= EXTREME_WAVES_M
     reasons = "; ".join(e.detail for e in evidence if not e.passed)
@@ -44,6 +52,11 @@ def fuse(
     if not extreme and neighbours_see_storm:
         return _assess(buoy_id, seq, Verdict.SUPPRESSED_WARNING, max(risk, SUSPICIOUS_RISK), evidence,
                        "Calm reading while neighbours report a storm: possible hidden danger, escalated.")
+    ai = by_layer.get("anomaly")
+    if ai is not None and ai.score is not None and ai.score >= SUSPICIOUS_RISK:
+        return _assess(buoy_id, seq, Verdict.TRUSTED, risk, evidence,
+                       f"Authentic and physically consistent. {ai.detail} (advisory only: "
+                       "real storms are unusual too).")
     return _assess(buoy_id, seq, Verdict.TRUSTED, risk, evidence, "All checks passed.")
 
 

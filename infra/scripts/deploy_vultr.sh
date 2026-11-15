@@ -18,7 +18,7 @@ echo "==> packaging commit $(git rev-parse --short HEAD) + processed data"
 TMP=$(mktemp -d)
 git archive --format=tar.gz -o "$TMP/app.tar.gz" HEAD
 tar -czf "$TMP/data.tar.gz" data/processed/42036.parquet data/processed/42097.parquet \
-  data/processed/42099.parquet data/processed/42013.parquet
+  data/processed/42099.parquet data/processed/42013.parquet models/isolation_forest.joblib
 
 echo "==> uploading to $IP"
 $SSH "mkdir -p $APP"

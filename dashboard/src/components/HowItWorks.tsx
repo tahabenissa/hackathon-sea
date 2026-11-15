@@ -1,8 +1,8 @@
 const LAYERS = [
   { n: 1, t: "Crypto gate", d: "Per-buoy HMAC signature, sequence number, timestamp and nonce. Stops tampering, fake devices and replays." },
   { n: 2, t: "Physics checks", d: "Limits learned from 3 years of real buoy data: impossible values, impossible jumps, waves without wind." },
-  { n: 3, t: "AI anomaly score (in progress)", d: "A model of normal sea behaviour will flag readings that do not fit, as evidence, never as proof." },
-  { n: 4, t: "Neighbour check", d: "Nearby buoys must tell a consistent story. A storm spreads across the network; a lie does not." },
+  { n: 3, t: "AI anomaly score (advisory)", d: "An Isolation Forest per buoy, trained on real 2023 data, scores how unusual each reading is. Shown to the operator, never obeyed blindly: real hurricanes are unusual too." },
+  { n: 4, t: "Neighbour check (next)", d: "Nearby buoys must tell a consistent story. A storm spreads across the network; a lie does not." },
 ];
 
 export default function HowItWorks() {
