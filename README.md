@@ -3,7 +3,8 @@
 A trust engine that checks ocean-buoy data before it can raise, or hide, a maritime warning.
 
 **Live demo:** https://45-76-249-39.sslip.io (running on a Vultr Compute instance) ·
-**API docs:** https://45-76-249-39.sslip.io/api/docs
+**API docs:** https://45-76-249-39.sslip.io/api/docs ·
+**Demo video:** [`video/SeaShield_AI_demo.mp4`](video/SeaShield_AI_demo.mp4) (2 min 36 s)
 
 HackGlobal 2026 · Track: **Civic and real-world impact**
 

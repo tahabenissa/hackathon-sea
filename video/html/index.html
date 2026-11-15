@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>SeaShield AI · demo</title>
+<style>
+  :root {
+    --sea: #fbfbf6; --shelf: #dcedf5; --shoal: #bcdcec; --land: #efe0ae; --land-edge: #9c8a55;
+    --ink: #1d1f21; --hydro: #2b6788; --grat: rgba(29,31,33,.28); --magenta: #b0168c;
+    --verify: #24734a; --paper: #f6f3e9;
+  }
+  #fit { width:1920px; height:1080px; }
+  #stage { position:relative; width:1920px; height:1080px; overflow:hidden; background:var(--paper);
+           color:var(--ink); font:26px/1.3 "Segoe UI", sans-serif; }
+  #world { position:absolute; left:0; top:0; width:6400px; height:3850px; transform-origin:0 0; }
+  #paper { position:absolute; inset:0; background:var(--paper); }
+  #chart { position:absolute; left:0; top:0; }
+  .lbl { position:absolute; white-space:nowrap; }
+  .water { font-family:Cambria, Georgia, serif; font-style:italic; color:var(--hydro); letter-spacing:.06em; }
+  .landname { font-family:"Segoe UI", sans-serif; text-transform:uppercase; letter-spacing:.32em; color:#7a6a3a; font-weight:600; }
+  .gratlbl { font:22px Consolas, monospace; color:#555; }
+  .note { position:absolute; font-size:22px; color:#555; }
+
+  /* buoys */
+  .buoy { position:absolute; width:0; height:0; }
+  .buoy svg { position:absolute; left:-22px; top:-62px; overflow:visible; }
+  .bname { position:absolute; left:26px; top:-58px; font:600 22px "Segoe UI"; white-space:nowrap; }
+  .bname small { display:block; font:400 17px "Segoe UI"; color:#555; }
+  .read { position:absolute; left:26px; top:6px; font:21px Consolas, monospace; white-space:nowrap; line-height:1.35; }
+  .read .lie { color:var(--magenta); font-weight:700; }
+  .ring { position:absolute; left:-48px; top:-48px; width:96px; height:96px; border:5px solid var(--magenta); border-radius:50%; opacity:0; }
+  .link { stroke:var(--ink); stroke-width:2.2; fill:none; opacity:0; }
+  #centre { position:absolute; left:3460px; top:1090px; width:250px; padding:14px 16px; background:#fffdf6; border:2px solid var(--ink);
+            font:600 22px "Segoe UI"; text-align:center; }
+  #centre small { display:block; font:400 17px "Segoe UI"; color:#555; }
+  #warnflag { position:absolute; left:3470px; top:1215px; padding:6px 14px; background:var(--ink); color:#fff; font:700 18px "Segoe UI"; letter-spacing:.12em; opacity:0; }
+  #hook { position:absolute; left:560px; top:880px; width:1500px; }
+  #hook .date { font:400 120px/1 Cambria, Georgia, serif; font-style:italic; color:var(--hydro); }
+  #hook .what { font:600 64px "Segoe UI"; margin-top:26px; letter-spacing:.02em; }
+  #hookcap { position:absolute; left:2440px; top:1985px; font:19px "Segoe UI"; color:#555; opacity:0; }
+  #lying { position:absolute; left:2330px; top:880px; font:italic 44px Cambria, Georgia, serif; color:var(--magenta); opacity:0; }
+
+  /* margin notes */
+  .sheet { position:absolute; width:1920px; height:1080px; }
+  .head { position:absolute; left:110px; top:80px; font:600 22px "Segoe UI"; letter-spacing:.34em; text-transform:uppercase; color:#555; }
+  .rule { position:absolute; left:110px; right:110px; top:122px; height:2px; background:var(--ink); }
+  .col { position:absolute; top:190px; width:780px; }
+  .col h2 { font:italic 400 66px/1 Cambria, Georgia, serif; margin:0 0 30px; }
+  .col h2.mag { color:var(--magenta); }
+  .col p { font-size:30px; margin:0; max-width:700px; }
+  .pair { display:flex; gap:56px; margin:12px 0 36px; align-items:flex-end; }
+  .pair div { font:22px "Segoe UI"; color:#555; }
+  .pair b { display:block; font:700 92px/1.05 Consolas, monospace; color:var(--ink); }
+  .pair .lie b, .pair .lie { color:var(--magenta); }
+  #slip { position:absolute; left:110px; top:800px; width:1700px; height:150px; border:2px solid var(--ink); background:#fffdf6; display:flex; align-items:center; gap:46px; padding:0 40px; box-sizing:border-box; font:28px Consolas, monospace; }
+  #slip .lie { color:var(--magenta); font-weight:700; }
+  #slip .ok { color:var(--ink); border:3px solid var(--ink); padding:6px 14px; font:700 24px "Segoe UI"; letter-spacing:.08em; }
+  #slip .say { font:italic 30px Cambria, Georgia, serif; color:#444; margin-left:auto; }
+
+  #prod h1 { position:absolute; left:110px; top:160px; margin:0; font:italic 400 120px/1 Cambria, Georgia, serif; }
+  #prod .sub { position:absolute; left:116px; top:300px; font-size:32px; color:#333; }
+  #course { position:absolute; left:0; top:0; overflow:visible; }
+  #course .pen { fill:none; stroke:var(--ink); stroke-width:4; stroke-linecap:butt; }
+  .mark { position:absolute; width:240px; text-align:center; }
+  .mark .n { width:62px; height:62px; margin:0 auto 16px; border:4px solid var(--ink); border-radius:50%; background:#fffdf6; display:grid; place-items:center; font:700 30px "Segoe UI"; }
+  .mark.lit .n { background:var(--ink); color:#fffdf6; }
+  .mark b { display:block; font:600 27px "Segoe UI"; }
+  .mark span { display:block; font-size:21px; color:#444; margin-top:6px; line-height:1.3; }
+  .mark i { display:inline-block; margin-top:8px; font:600 18px "Segoe UI"; letter-spacing:.14em; text-transform:uppercase; color:#555; border:2px solid #777; padding:2px 8px; font-style:normal; }
+  .end { position:absolute; font:600 26px "Segoe UI"; }
+  .end small { display:block; font:400 20px "Segoe UI"; color:#444; }
+  .end.go { color:var(--verify); }
+
+  /* live inset */
+  #inset { position:absolute; left:4290px; top:150px; width:1620px; height:2512px; border:3px solid var(--ink); box-shadow: 0 0 0 7px var(--paper), 0 0 0 9px var(--ink); background:#081c30; }
+  #insetbar { position:absolute; left:0; top:0; right:0; height:90px; background:#fffdf6; border-bottom:3px solid var(--ink); display:flex; align-items:center; gap:22px; padding:0 22px; box-sizing:border-box; }
+  #insetbar .live { font:700 20px "Segoe UI"; letter-spacing:.2em; color:#fff; background:var(--verify); padding:5px 12px; }
+  #insetbar .url { font:30px Consolas, monospace; }
+  #insetbar .host { margin-left:auto; font:600 22px "Segoe UI"; color:#333; }
+  #page { position:absolute; left:10px; top:100px; width:1600px; height:2400px; overflow:hidden; background:#081c30; }
+  .shot { position:absolute; left:0; top:0; width:1600px; opacity:0; }
+  .shot.on { opacity:1; }
+  .hot { position:absolute; width:20px; height:20px; margin:-10px 0 0 -10px; }
+  .box { position:absolute; overflow:visible; }
+  .box rect { fill:none; stroke-width:5; stroke-linecap:butt; }
+  .box.mag rect { stroke:#ff4fd2; }
+  .box.ok rect { stroke:#3ee38c; }
+  .tag { position:absolute; padding:8px 14px; font:700 22px "Segoe UI"; white-space:nowrap; opacity:0; }
+  .tag.mag { background:#ff4fd2; color:#1a0016; }
+  .tag.ok { background:#3ee38c; color:#002914; }
+  #cursor { position:absolute; left:0; top:0; width:0; height:0; z-index:20; }
+  #cursor svg { position:absolute; left:-4px; top:-2px; }
+  .film-ripple { position:absolute; width:70px; height:70px; border:4px solid #ff4fd2; border-radius:50%; opacity:0; z-index:19; }
+
+  /* results */
+  #res .big { position:absolute; font:600 150px/1 "Segoe UI", sans-serif; font-variant-numeric:tabular-nums; }
+  #res .cap { position:absolute; font-size:27px; width:760px; }
+  #res .cap small { display:block; font-size:21px; color:#555; margin-top:8px; }
+  #res .neg { position:absolute; left:110px; top:760px; width:1700px; border-top:2px solid var(--ink); padding-top:26px; display:flex; gap:70px; font-size:26px; }
+  #res .neg div { flex:1; }
+  #res .neg b { display:block; font:600 27px "Segoe UI"; margin-bottom:6px; }
+
+  /* title block */
+  #title { position:absolute; left:470px; top:690px; width:1480px; padding:46px 56px; background:#fffdf6; border:3px solid var(--ink); box-shadow: 0 0 0 7px #fffdf6, 0 0 0 9px var(--ink); opacity:0; }
+  #title h1 { margin:0; font:italic 400 110px/1 Cambria, Georgia, serif; }
+  #title p { margin:22px 0 30px; font-size:30px; }
+  #title .row { font:30px Consolas, monospace; margin:8px 0; }
+  #title .row span { display:inline-block; width:190px; font:600 22px "Segoe UI"; letter-spacing:.16em; text-transform:uppercase; color:#555; }
+  #title .fine { margin-top:28px; font-size:19px; color:#555; }
+
+  #corner { position:absolute; right:26px; bottom:18px; font:18px "Segoe UI"; color:#444; background:rgba(246,243,233,.92); padding:4px 10px; z-index:30; }
+</style>
+</head>
+<body>
+<div id="fit"><div id="stage"><div id="world">
+  <div id="paper"></div>
+  <svg id="chart" width="6400" height="3850"></svg>
+  <div id="labels"></div>
+
+  <!-- HOOK: on the chart -->
+  <div id="hook"><div class="date">26 September 2024</div><div class="what">Hurricane Helene crosses the Gulf of Mexico</div></div>
+  <svg id="links" width="6400" height="3850" style="position:absolute;left:0;top:0;overflow:visible"></svg>
+  <div id="centre">Warning centre<small>trusts what it receives</small></div>
+  <div id="warnflag">COASTAL WARNING</div>
+  <div id="hookcap">Real NOAA readings, 26 Sep 2024, 19:00 UTC</div>
+  <div id="lying">one buoy is lying?</div>
+
+  <!-- PROBLEM: margin note -->
+  <div class="sheet" id="prob" style="left:260px; top:2420px">
+    <div class="head">Notes · False data injection</div><div class="rule"></div>
+    <div class="col" id="pA" style="left:110px">
+      <h2 class="mag">Fake alarm</h2>
+      <div class="pair"><div>real sea<b>0.6 m</b></div><div class="lie">buoy sends<b>8.1 m</b></div></div>
+      <p>Ports close and people evacuate for nothing.</p>
+    </div>
+    <div class="col" id="pB" style="left:1010px">
+      <h2 class="mag">Hidden storm</h2>
+      <div class="pair"><div>real sea<b>6.5 m</b></div><div class="lie">buoy sends<b>1.0 m</b></div></div>
+      <p>The warning never goes out.</p>
+    </div>
+    <div id="slip">
+      <span>SS-B01 · wave height <span class="lie">8.1 m</span></span>
+      <span class="ok">SIGNATURE VALID</span>
+      <span class="say">signed with the stolen key</span>
+    </div>
+  </div>
+
+  <!-- PRODUCT: margin note -->
+  <div class="sheet" id="prod" style="left:2280px; top:2420px">
+    <div class="head">Course of every reading</div><div class="rule"></div>
+    <h1 id="ptitle">SeaShield AI</h1>
+    <div class="sub" id="psub">checks every reading before it can raise, or silence, a warning</div>
+    <svg id="course" width="1920" height="1080"><path class="pen" id="cpath" pathLength="1" d="M 120 640 L 1560 640"/></svg>
+    <div class="end" style="left:110px; top:690px">buoy<small>signed reading</small></div>
+    <div class="mark" id="m1" style="left:230px; top:609px"><div class="n">1</div><b>Cryptography</b><span>from this buoy, unchanged, sent once</span></div>
+    <div class="mark" id="m2" style="left:540px; top:609px"><div class="n">2</div><b>Physics</b><span>limits measured on 3 years of real data</span></div>
+    <div class="mark" id="m3" style="left:850px; top:609px"><div class="n">3</div><b>AI model</b><span>normal sea behaviour</span><i>advisory</i></div>
+    <div class="mark" id="m4" style="left:1160px; top:609px"><div class="n">4</div><b>Neighbours</b><span>nearby buoys must agree</span></div>
+    <div class="end go" id="eGo" style="left:1590px; top:560px">verified<small>warning goes out</small></div>
+    <div class="end" id="eOp" style="left:1590px; top:690px">suspicious<small>held for a human operator · nothing deleted</small></div>
+  </div>
+
+  <!-- LIVE INSET: real captures of the Vultr site -->
+  <div id="inset">
+    <div id="insetbar"><span class="live">LIVE</span><span class="url">https://45-76-249-39.sslip.io</span><span class="host">Vultr Compute instance</span></div>
+    <div id="page">
+      <img class="shot" id="s1" src="shots/01-calm.png">
+      <img class="shot" id="s2" src="shots/02-spike.png">
+      <img class="shot" id="s3" src="shots/03-tamper.png">
+      <img class="shot" id="s4" src="shots/04-replay.png">
+      <img class="shot" id="s5" src="shots/05-storm.png">
+      <img class="shot" id="s6" src="shots/06-suppress.png">
+      <!-- hotspots in page CSS pixels -->
+      <div class="hot" id="hSpike" style="left:1062px; top:262px"></div>
+      <div class="hot" id="hTamper" style="left:1062px; top:372px"></div>
+      <div class="hot" id="hReplay" style="left:1322px; top:362px"></div>
+      <div class="hot" id="hSuppress" style="left:1330px; top:262px"></div>
+      <div class="hot" id="vTop" style="left:800px; top:400px"></div>
+      <div class="hot" id="vMap" style="left:508px; top:318px"></div>
+      <div class="hot" id="vConsole" style="left:1190px; top:300px"></div>
+      <div class="hot" id="vCentres" style="left:794px; top:690px"></div>
+      <div class="hot" id="vHeld" style="left:1135px; top:752px"></div>
+      <div class="hot" id="vReplay" style="left:800px; top:1394px"></div>
+      <div class="hot" id="vStorm" style="left:794px; top:870px"></div>
+      <div class="hot" id="vEsc" style="left:1050px; top:800px"></div>
+      <!-- annotation boxes (page CSS pixels) -->
+      <svg class="box mag" id="bSpikeU" style="left:134px; top:706px" width="640" height="46"><rect pathLength="1" x="0" y="0" width="640" height="46"/></svg>
+      <svg class="box ok" id="bSpikeS" style="left:816px; top:706px" width="644" height="92"><rect pathLength="1" x="0" y="0" width="644" height="92"/></svg>
+      <svg class="box mag" id="bTampU" style="left:134px; top:709px" width="644" height="48"><rect pathLength="1" x="0" y="0" width="644" height="48"/></svg>
+      <svg class="box ok" id="bTampS" style="left:822px; top:709px" width="644" height="48"><rect pathLength="1" x="0" y="0" width="644" height="48"/></svg>
+      <svg class="box ok" id="bReplay" style="left:132px; top:1376px" width="1336" height="38"><rect pathLength="1" x="0" y="0" width="1336" height="38"/></svg>
+      <svg class="box ok" id="bStormS" style="left:822px; top:709px" width="644" height="456"><rect pathLength="1" x="0" y="0" width="644" height="456"/></svg>
+      <svg class="box ok" id="bEsc" style="left:819px; top:777px" width="650" height="96"><rect pathLength="1" x="0" y="0" width="650" height="96"/></svg>
+      <div class="tag mag" id="tSpikeU" style="left:470px; top:660px">fake 8.1 m → disaster alert</div>
+      <div class="tag ok" id="tSpikeS" style="left:1080px; top:806px">held: jump · calm wind · neighbour</div>
+      <div class="tag mag" id="tTampU" style="left:470px; top:662px">edited to 9 m → disaster alert</div>
+      <div class="tag ok" id="tTampS" style="left:1110px; top:662px">signature broken → blocked</div>
+      <div class="tag ok" id="tReplay" style="left:900px; top:1330px">replayed message → rejected</div>
+      <div class="tag ok" id="tStormS" style="left:1020px; top:1172px">real storm → verified warnings</div>
+      <div class="tag mag" id="tEscU" style="left:180px; top:960px">21:30 · buoy sends 1.0 m · no alert</div>
+      <div class="tag ok" id="tEsc" style="left:1050px; top:880px">hidden storm → escalated</div>
+    </div>
+  </div>
+
+  <!-- RESULTS: chart notes -->
+  <div class="sheet" id="res" style="left:4300px; top:2730px">
+    <div class="head">Notes on accuracy · real NOAA data, Jul 2024 – Dec 2025</div><div class="rule"></div>
+    <div class="big" id="r0" style="left:110px; top:200px">0</div>
+    <div class="cap" id="c0" style="left:110px; top:370px">false alarms from the physics checks<small>on 44,024 genuine readings, incl. 871 during hurricanes Debby, Helene and Milton. Limits were set from 2023–2025 data.</small></div>
+    <div class="big" id="r265" style="left:1000px; top:200px">265 / 265</div>
+    <div class="cap" id="c265" style="left:1000px; top:370px">fake wave jumps of +4 m and +7.5 m caught<small>3 wave buoys · attacks simulated on real readings</small></div>
+    <div class="neg" id="rneg">
+      <div><b>Not caught</b>fakes of 2 m or less (0–1.3 %), and wind fakes within real wind changes</div>
+      <div><b>AI kept advisory</b>allowed to decide alone, it held 34 of 137 genuine Helene readings</div>
+    </div>
+  </div>
+
+  <!-- TITLE BLOCK -->
+  <div id="title">
+    <h1>SeaShield AI</h1>
+    <p>Checks every ocean-buoy reading before it can raise, or hide, a warning.</p>
+    <div class="row"><span>Live demo</span>https://45-76-249-39.sslip.io</div>
+    <div class="row"><span>Code</span>github.com/tahabenissa/hackathon-sea</div>
+    <div class="row"><span>Runs on</span>Vultr Compute · open source</div>
+    <div class="fine">HackGlobal 2026 · Civic and real-world impact · Data: NOAA National Data Buoy Center · Attacks are simulated · Narration: AI-generated voice (Supertonic 3)</div>
+  </div>
+
+  <div id="cursor"><svg width="40" height="44" viewBox="0 0 40 44"><path d="M2 2 L2 34 L11 26 L17 40 L23 37 L17 24 L29 24 Z" fill="#fff" stroke="#1d1f21" stroke-width="2.5" stroke-linejoin="round"/></svg></div>
+</div>
+<div id="corner">Real NOAA data · simulated attacks · AI narration</div>
+</div></div>
+
+<script src="build/timing.js"></script>
+<script src="film.js"></script>
+<script src="player.js"></script>
+<script>
+// ---------------------------------------------------------------- chart (real coordinates)
+const X = lon => 260 + (lon + 93.6) * 274;
+const Y = lat => 260 + (31 - lat) * 309;
+const P = ([lat, lon]) => `${X(lon).toFixed(1)},${Y(lat).toFixed(1)}`;
+// Simplified coastline (lat, lon), north Gulf west to east, around the peninsula, up the east coast.
+const COAST = [[29.75,-93.6],[29.70,-92.6],[29.55,-91.8],[29.30,-91.1],[29.10,-90.6],[29.05,-90.1],[29.15,-89.6],
+  [29.0,-89.25],[29.25,-89.1],[29.6,-89.4],[30.05,-89.5],[30.35,-89.3],[30.38,-88.9],[30.32,-88.5],[30.25,-88.1],
+  [30.28,-87.6],[30.33,-87.2],[30.38,-86.5],[30.20,-85.9],[30.05,-85.6],[29.68,-85.36],[29.62,-85.0],[29.65,-84.7],
+  [29.90,-84.38],[30.05,-84.18],[29.95,-83.9],[29.82,-83.6],[29.66,-83.39],[29.44,-83.29],[29.14,-83.03],[28.90,-82.70],
+  [28.55,-82.66],[28.15,-82.79],[27.97,-82.83],[27.72,-82.74],[27.60,-82.75],[27.50,-82.71],[27.30,-82.57],[27.10,-82.45],
+  [26.72,-82.26],[26.45,-82.10],[26.14,-81.80],[25.94,-81.73],[25.85,-81.68],[25.60,-81.30],[25.15,-81.10],[25.15,-80.85],
+  [25.25,-80.60],[25.25,-80.40],[25.45,-80.33],[25.77,-80.13],[26.70,-80.03],[27.50,-80.30],[28.40,-80.60],[29.30,-81.05],
+  [30.30,-81.40],[31.0,-81.45]];
+const SHELF = [[28.3,-93.6],[28.4,-92.0],[28.6,-90.5],[28.9,-89.6],[29.6,-88.3],[29.7,-87.4],[29.5,-86.5],[29.0,-85.8],
+  [28.3,-85.25],[27.3,-84.85],[26.3,-84.35],[25.3,-83.65],[24.6,-83.05],[24.45,-81.8],[24.6,-80.6],[25.1,-80.05]];
+const KEYS = [[25.05,-80.45],[24.85,-80.75],[24.72,-81.05],[24.66,-81.45],[24.56,-81.80]];
+const svg = document.getElementById('chart');
+const ns = 'http://www.w3.org/2000/svg';
+const add = (tag, attrs) => { const e = document.createElementNS(ns, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); svg.appendChild(e); return e; };
+const L = { x0: 260, y0: 260, x1: 260 + 13.8 * 274, y1: 260 + 6.5 * 309 };
+add('rect', { x: L.x0, y: L.y0, width: L.x1 - L.x0, height: L.y1 - L.y0, fill: '#fbfbf6' });
+add('polygon', { points: [...COAST.slice(0, 49), ...SHELF.slice().reverse()].map(P).join(' '), fill: '#dcedf5' });
+add('polyline', { points: COAST.map(P).join(' '), fill: 'none', stroke: '#bcdcec', 'stroke-width': 46, 'stroke-linejoin': 'round' });
+add('polygon', { points: [[31, -93.6], ...COAST, [31, -79.8]].map(P).join(' ') + ` ${L.x1},${L.y0} ${L.x0},${L.y0}`, fill: '#efe0ae', stroke: '#9c8a55', 'stroke-width': 3, 'stroke-linejoin': 'round' });
+add('polyline', { points: KEYS.map(P).join(' '), fill: 'none', stroke: '#efe0ae', 'stroke-width': 11, 'stroke-linecap': 'round' });
+for (let lon = -93; lon <= -80; lon++) add('line', { x1: X(lon), y1: L.y0, x2: X(lon), y2: L.y1, stroke: 'rgba(29,31,33,.22)', 'stroke-width': 1.5 });
+for (let lat = 25; lat <= 30; lat++) add('line', { x1: L.x0, y1: Y(lat), x2: L.x1, y2: Y(lat), stroke: 'rgba(29,31,33,.22)', 'stroke-width': 1.5 });
+add('rect', { x: L.x0, y: L.y0, width: L.x1 - L.x0, height: L.y1 - L.y0, fill: 'none', stroke: '#1d1f21', 'stroke-width': 4 });
+add('rect', { x: L.x0 - 22, y: L.y0 - 22, width: L.x1 - L.x0 + 44, height: L.y1 - L.y0 + 44, fill: 'none', stroke: '#1d1f21', 'stroke-width': 1.5 });
+// compass rose (blue-grey; magenta is reserved for false data)
+const rx = X(-90.2), ry = Y(25.6);
+add('circle', { cx: rx, cy: ry, r: 150, fill: 'none', stroke: '#2b6788', 'stroke-width': 2 });
+add('circle', { cx: rx, cy: ry, r: 118, fill: 'none', stroke: '#2b6788', 'stroke-width': 1 });
+for (let d = 0; d < 360; d += 10) { const a = d * Math.PI / 180, r2 = d % 90 ? 136 : 128;
+  add('line', { x1: rx + Math.sin(a) * r2, y1: ry - Math.cos(a) * r2, x2: rx + Math.sin(a) * 150, y2: ry - Math.cos(a) * 150, stroke: '#2b6788', 'stroke-width': d % 90 ? 1.5 : 3 }); }
+add('path', { d: `M ${rx} ${ry - 112} L ${rx + 16} ${ry} L ${rx} ${ry + 112} L ${rx - 16} ${ry} Z M ${rx - 112} ${ry} L ${rx} ${ry - 14} L ${rx + 112} ${ry} L ${rx} ${ry + 14} Z`, fill: '#2b6788', opacity: .55 });
+// scale bar: at 27.5°N, 100 km ≈ 277 px
+const sx = X(-92.8), sy = Y(24.85);
+add('rect', { x: sx, y: sy, width: 277, height: 12, fill: '#1d1f21' });
+add('rect', { x: sx + 138.5, y: sy, width: 138.5, height: 12, fill: '#fbfbf6', stroke: '#1d1f21', 'stroke-width': 2 });
+
+const labels = document.getElementById('labels');
+const lab = (cls, text, x, y, size, extra = '') => { const d = document.createElement('div'); d.className = 'lbl ' + cls;
+  d.style.cssText = `left:${x}px; top:${y}px; font-size:${size}px; ${extra}`; d.textContent = text; labels.appendChild(d); return d; };
+lab('water', 'Gulf of Mexico', X(-91.6), Y(26.7), 88);
+lab('water', 'West Florida Shelf', X(-86.0), Y(26.2), 40);
+lab('water', 'Straits of Florida', X(-83.2), Y(24.75), 30);
+lab('landname', 'Florida', X(-82.3), Y(29.6), 44);
+lab('landname', 'Louisiana', X(-92.6), Y(30.6), 34);
+lab('landname', 'Tampa', X(-82.35), Y(28.12), 22, 'letter-spacing:.2em');
+for (let lon = -92; lon <= -81; lon += 2) lab('gratlbl', `${-lon}°W`, X(lon) - 26, L.y1 + 30, 22);
+for (let lat = 25; lat <= 30; lat++) lab('gratlbl', `${lat}°N`, L.x0 - 110, Y(lat) - 12, 22);
+lab('gratlbl', '0      50     100 km', sx, sy + 22, 20);
+lab('note', 'Simplified chart: coastline and depth tint approximate. Buoy positions from the NOAA NDBC station table.', L.x0, L.y1 + 72, 22);
+lab('note', 'EASTERN GULF OF MEXICO · SEASHIELD BUOY NETWORK', L.x0, L.y0 - 70, 24, 'letter-spacing:.3em; color:#333; font-weight:600');
+
+// buoys at their real positions + real readings at 2024-09-26 19:00 UTC (live capture 05-storm)
+const BUOYS = [
+  { id: 'b1', name: 'SS-B01 West Tampa', st: 'NOAA 42036', lat: 28.500, lon: -84.505, read: ['waves 5.2 m', 'wind 17.8 m/s', '990 hPa'] },
+  { id: 'b2', name: 'SS-B02 Pulley Ridge', st: 'NOAA 42097', lat: 25.704, lon: -83.654, read: ['waves 7.7 m'] },
+  { id: 'b3', name: 'SS-B03 St. Petersburg', st: 'NOAA 42099', lat: 27.352, lon: -84.275, read: ['offline in the storm'] },
+  { id: 'b4', name: 'SS-B04 C10', st: 'NOAA 42013', lat: 27.173, lon: -82.924, read: ['wind 22.1 m/s', '993 hPa'] },
+];
+const world = document.getElementById('world');
+for (const b of BUOYS) {
+  const d = document.createElement('div'); d.className = 'buoy'; d.id = b.id;
+  d.style.left = X(b.lon) + 'px'; d.style.top = Y(b.lat) + 'px';
+  d.innerHTML = `<div class="ring"></div><svg width="44" height="66" viewBox="0 0 44 66"><path d="M22 4 L22 40" stroke="#1d1f21" stroke-width="3"/><path d="M12 10 L32 10 L22 22 Z" fill="#1d1f21"/>
+    <path d="M6 48 Q22 34 38 48 Z" fill="#1d1f21"/><circle cx="22" cy="60" r="5" fill="none" stroke="#1d1f21" stroke-width="2.5"/></svg>
+    <div class="bname">${b.name}<small>${b.st}</small></div><div class="read">${b.read.map(r => `<div>${r}</div>`).join('')}</div>`;
+  world.appendChild(d);
+}
+// radio links buoy -> warning centre
+const links = document.getElementById('links');
+for (const b of BUOYS.filter(b => b.id !== 'b3')) {
+  const p = document.createElementNS(ns, 'path');
+  p.setAttribute('d', `M ${X(b.lon) + 2} ${Y(b.lat) - 40} L 3585 1190`);
+  p.setAttribute('class', 'link'); p.id = 'l' + b.id; links.appendChild(p);
+}
+
+// ---------------------------------------------------------------- helpers
+const T = TIMING.duration;
+const steps = [];
+const at = (a, s) => steps.push({ at: a, ...s });
+const show = (a, sel, dur = .45) => at(a, { anim: sel, kf: { opacity: [0, 1] }, dur, ease: 'out' });
+const hide = (a, sel, dur = .35) => at(a, { anim: sel, kf: { opacity: [1, 0] }, dur, ease: 'in' });
+const pen = (a, sel, dur = .7) => at(a, { anim: sel + ' rect', kf: { strokeDasharray: ['1 1', '1 1'], strokeDashoffset: [1, 0] }, dur, ease: 'out' });
+const cam = (a, focus, zoom, dur = 1.15) => at(a, { camera: true, focus, zoom, dur, ease: 'move' });
+const shot = (a, n) => { for (let i = 1; i <= 6; i++) at(a, { set: '#s' + i, cls: 'on', on: i === n }); };
+
+// boxes and tags start hidden
+const BOXES = ['#bSpikeU', '#bSpikeS', '#bTampU', '#bTampS', '#bReplay', '#bStormS', '#bEsc'];
+
+// ---------------------------------------------------------------- HOOK
+cam(0, null, .47, 0); steps[steps.length - 1].x = 2150; steps[steps.length - 1].y = 1290;
+at(0, { anim: '#hook', kf: { opacity: [0, 1], transform: ['translateX(-40px)', 'none'] }, dur: .9, ease: 'out' });
+at(0, { anim: '.buoy, #centre, #links, #title, .tag', kf: { opacity: [0, 0] }, dur: .01 });
+shot(0, 1);
+at('h2:Off', { anim: '#hook', kf: { opacity: [1, 0] }, dur: .5 });
+at('h2:Off', { camera: true, x: 2990, y: 1440, zoom: 1.08, dur: 1.6, ease: 'move' });
+at('h2:buoys-0.1', { anim: '.buoy', kf: { opacity: [0, 1] }, dur: .4, stagger: .18 });
+at('h2:waves-0.1', { anim: '.buoy .read', kf: { opacity: [0, 1] }, dur: .3, stagger: .12 });
+show('h2:waves', '#hookcap');
+show('h2:warning-0.1', '#centre', .4);
+at('h2:centre', { anim: '#links', kf: { opacity: [0, 1] }, dur: .3 });
+at('h2:centre', { anim: '.link', kf: { opacity: [0, 1] }, dur: .6, stagger: .15 });
+at('h3:High-0.1', { anim: '#b2 .read', kf: { fontWeight: [400, 700], transform: ['scale(1)', 'scale(1.18)'] }, dur: .35 });
+at('h3:warning-0.15', { anim: '#warnflag', kf: { opacity: [0, 1], transform: ['translateY(-14px)', 'none'] }, dur: .35, ease: 'out' });
+at('h4:what-0.2', { camera: true, x: 2820, y: 1110, zoom: 1.5, dur: 1.0, ease: 'move' });
+at('h4:lying-0.3', { anim: '#b1 .ring', kf: { opacity: [0, 1], transform: ['scale(1.6)', 'scale(1)'] }, dur: .4, ease: 'out' });
+at('h4:lying-0.1', { anim: '#b1 .read', kf: { color: ['#1d1f21', '#b0168c'] }, dur: .3 });
+at('h4:lying', { anim: '#lying', kf: { opacity: [0, 1], transform: ['translateX(20px)', 'none'] }, dur: .4, ease: 'out' });
+
+// ---------------------------------------------------------------- PROBLEM
+cam('p1-0.3', '#prob', 1, 1.5);
+at('p1-0.3', { anim: '#pA, #pB, #slip', kf: { opacity: [0, 0] }, dur: .01 });
+show('p1:hacked-0.1', '#pA', .5);
+show('p2:calm-0.2', '#pB', .5);
+at('p3:digital-0.1', { anim: '#slip', kf: { opacity: [0, 1], transform: ['translateY(18px)', 'none'] }, dur: .45, ease: 'out' });
+at('p3:stolen-0.1', { anim: '#slip .say', kf: { color: ['#444', '#b0168c'] }, dur: .3 });
+
+// ---------------------------------------------------------------- PRODUCT
+cam('s1-0.4', '#prod', 1, 1.3);
+at('s1-0.4', { anim: '#ptitle, #psub, .mark, .end, #course', kf: { opacity: [0, 0] }, dur: .01 });
+at('s1:SeaShield-0.1', { anim: '#ptitle', kf: { opacity: [0, 1], transform: ['translateX(-30px)', 'none'] }, dur: .6, ease: 'out' });
+show('s1:checks', '#psub', .5);
+at('s2:First-0.2', { anim: '#course', kf: { opacity: [0, 1] }, dur: .01 });
+at('s2:First-0.2', { anim: '#cpath', kf: { strokeDasharray: ['1 1', '1 1'], strokeDashoffset: [1, 0] }, dur: 2.2, ease: 'linear' });
+at('s2:First-0.2', { anim: '#prod .end:not(.go):not(#eOp)', kf: { opacity: [0, 1] }, dur: .4 });
+show('s2:cryptography-0.1', '#m1', .35); at('s2:cryptography', { set: '#m1', cls: 'lit' });
+show('s3:Physics-0.1', '#m2', .35); at('s3:Physics', { set: '#m2', cls: 'lit' });
+show('s3:model-0.4', '#m3', .35); at('s3:model-0.3', { set: '#m3', cls: 'lit' });
+show('s3:neighbouring-0.1', '#m4', .35); at('s3:neighbouring', { set: '#m4', cls: 'lit' });
+show('s4:Anything-0.1', '#eGo', .4);
+show('s4:operator-0.2', '#eOp', .4);
+
+// ---------------------------------------------------------------- LIVE ON VULTR
+cam('d1-0.5', '#vTop', 1.2, 1.6);
+at('d2:Four-0.1', { camera: true, focus: '#vMap', zoom: 1.95, dur: 1.1, ease: 'move' });
+cam('d2:Two-0.1', '#vCentres', 1.3, 1.1);
+cam('d3:attack-0.4', '#vConsole', 1.8, 1.0);
+at('d3:fake', { cursor: '#hSpike', click: true });
+shot('d3:fake+0.25', 2);
+cam('d4:unprotected-0.3', '#vCentres', 1.28, 1.0);
+pen('d4:disaster-0.2', '#bSpikeU'); show('d4:disaster', '#tSpikeU', .3);
+pen('d4:holds-0.2', '#bSpikeS'); show('d4:why', '#tSpikeS', .3);
+cam('d4:why', '#vHeld', 2.0, 1.0);
+at('d4:why-0.1', { anim: '#tSpikeU, #bSpikeU', kf: { opacity: [1, 0] }, dur: .25 });
+cam('d5:Now-0.3', '#vConsole', 1.8, 1.0);
+at('d5:Now-0.3', { anim: '#bSpikeS, #tSpikeS', kf: { opacity: [1, 0] }, dur: .3 });
+at('d5:changes', { cursor: '#hTamper', click: true });
+shot('d5:changes+0.25', 3);
+cam('d5:signature-0.3', '#vCentres', 1.28, .9);
+pen('d5:signature', '#bTampU'); show('d5:signature+0.2', '#tTampU', .3);
+pen('d5:Rejected-0.2', '#bTampS'); show('d5:blocked-0.2', '#tTampS', .3);
+cam('d6-0.3', '#vConsole', 1.8, .9);
+at('d6-0.3', { anim: '#bTampU, #bTampS, #tTampU, #tTampS', kf: { opacity: [1, 0] }, dur: .3 });
+at('d6:replayed', { cursor: '#hReplay', click: true });
+shot('d6:replayed+0.3', 4);
+cam('d6:old', '#vReplay', 1.3, .9);
+pen('d6:rejected-0.2', '#bReplay'); show('d6:rejected', '#tReplay', .3);
+at('d7-0.3', { anim: '#bReplay, #tReplay', kf: { opacity: [1, 0] }, dur: .3 });
+at('d7-0.3', { cursorOff: true });
+shot('d7-0.2', 5);
+cam('d7-0.2', '#vMap', 1.95, 1.0);
+cam('d7:neighbours-0.2', '#vStorm', 1.2, 1.1);
+pen('d7:confirms-0.1', '#bStormS', .9); show('d7:warnings', '#tStormS', .3);
+cam('d8-0.2', '#vConsole', 1.8, 1.0);
+at('d8-0.2', { anim: '#bStormS, #tStormS', kf: { opacity: [1, 0] }, dur: .3 });
+at('d8:calm', { cursor: '#hSuppress', click: true });
+shot('d8:calm+0.3', 6);
+cam('d8:unprotected-0.3', '#vCentres', 1.3, .9);
+show('d8:quiet-0.2', '#tEscU', .3);
+cam('d8:neighbour-0.3', '#vEsc', 1.75, .9);
+at('d8:neighbour-0.4', { anim: '#tEscU', kf: { opacity: [1, 0] }, dur: .25 });
+pen('d8:neighbour', '#bEsc'); show('d8:escalates-0.2', '#tEsc', .3);
+at('r1-0.2', { cursorOff: true });
+
+// ---------------------------------------------------------------- RESULTS
+cam('r1-0.4', '#res', 1, 1.5);
+at('r1-0.4', { anim: '#r0, #r265, #c0, #c265, #rneg', kf: { opacity: [0, 0] }, dur: .01 });
+show('r1:physics-0.2', '#r0', .3); show('r1:physics', '#c0', .4);
+show('r2:caught', '#c265', .4); show('r2:two-0.15', '#r265', .2);
+at('r2:two', { count: '#r265', from: 0, to: 265, dur: 1.6, fmt: v => `${Math.round(v)} / 265` });
+show('r3:Smaller-0.1', '#rneg', .5);
+
+// ---------------------------------------------------------------- CLOSE
+cam('c1-0.4', '#title', 1.15, 1.6);
+at('c1-0.3', { anim: '#title', kf: { opacity: [0, 1] }, dur: .6, ease: 'out' });
+
+FilmPlayer.start(() => Film.create({
+  stage: '#stage', world: '#world', timing: TIMING, cursor: '#cursor', width: 1920, height: 1080, steps,
+}), { fit: '#fit', audio: 'build/narration.m4a', timing: TIMING });
+</script>
+</body>
+</html>
