@@ -17,7 +17,7 @@
 
 | # | Deliverable (hackathon rules) | Status | Owner |
 |---|---|---|---|
-| 1 | **Public** GitHub repo with setup instructions + docs | 🟡 Docs ready, secrets scan clean; **repo still private** | **You**: `! gh repo edit tahabenissa/hackathon-sea --visibility public --accept-visibility-change-consequences` |
+| 1 | **Public** GitHub repo with setup instructions + docs | ✅ Public since 2026-11-15: https://github.com/tahabenissa/hackathon-sea | Done |
 | 2 | Backend deployed on a **Vultr Compute** instance | 🟡 Deploy script ready (`infra/scripts/deploy_vultr.sh`); **waiting for the server IP** | You create the server → I deploy |
 | 3 | **Public demo URL**, product-style | 🟡 Live page built and tested locally; goes live with #2 at `https://<ip>.sslip.io` | Me |
 | 4 | Recorded **demo video** running on Vultr | ⬜ After #3 | You record (script below) |
