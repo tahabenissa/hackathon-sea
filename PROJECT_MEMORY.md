@@ -32,7 +32,7 @@ Python 3.12 (pydantic v2, pydantic-settings, paho-mqtt v2, FastAPI, SQLAlchemy 2
 ## File map
 - `SEASHIELD_AI_MASTER_PROMPT.md`: master spec (threat model, architecture, scenarios, Vultr plan)
 - `docs/PLAN.md`: opens with the **DEADLINE PLAN (15 Nov)**: deliverables status, steps D1–D10 (D1–D2 done; D3 Vultr server + D4 public repo = user), demo video script, honest limitations; then phases 0–10 as the post-hackathon roadmap, risks, checklist
-- `docs/PHASE_0.md`, `PHASE_1.md`, `PHASE_2.md`: phase reports (what was done, results)
+- `docs/PHASE_0.md`, `PHASE_1.md`, `PHASE_2.md`, `PHASE_D6.md` (AI layer results): phase reports (what was done, results)
 - `docs/data-notes.md`: **all real data facts** (cluster, coverage, outages, storms, neighbour stats, change rates, split)
 - `docs/assets/phase1/`: stats.json + figures (normal week, Idalia, Helene, Milton, wave vs wind)
 - `.gitattributes`: forces LF line endings (scripts and configs run on Linux)
@@ -50,7 +50,7 @@ Python 3.12 (pydantic v2, pydantic-settings, paho-mqtt v2, FastAPI, SQLAlchemy 2
 - `ml/`: `download_ndbc.py` ✅, `clean.py` ✅ (per-column sentinels, hourly, vector wind dir, `interpolate_short_gaps`), `survey.py` ✅ (compare stations), `explore.py` ✅ (stats + figures), `train.py` ✅ (one IsolationForest+StandardScaler per buoy on real 2023, calibration q99→0, train max→0.5; writes `models/isolation_forest.joblib`, ~8.7 MB), `evaluate.py` ✅ (`--part validation|test`; replays real data through physics + AI, injects seeded +0.5..7.5 m attack twins on 2 % of hours, FP incl. storms Debby/Helene/Milton → `docs/assets/eval/<part>.json`), `README.md`
 - `infra/scripts/deploy_vultr.sh`: one-command deploy (git archive + data → server, Docker, ufw 22/80/443, keys/.env on the server, sslip.io HTTPS)
 - `infra/`: mosquitto (dev conf published on 127.0.0.1:1883, prod TLS conf, acl incl. `operator` for control topics), `caddy/Caddyfile`, `postgres/init.sql` (buoys with sensors[], measurements, incidents, alerts), `scripts/` (gen_buoy_keys.py, gen_certs.sh, server_setup.sh)
-- `dashboard/`: single page `src/App.tsx` + `useLive.ts` + `components/` (BuoyMap Leaflet/CARTO dark, Centres, AttackConsole, WaveChart, EventFeed, HowItWorks, VerdictBadge), `src/api/client.ts`, `src/styles/theme.css`, Dockerfile (node:22-alpine + npm ci, then caddy:2; build context = repo root)
+- `dashboard/`: single page `src/App.tsx` + `useLive.ts` + `components/` (BuoyMap Leaflet/CARTO dark, Centres, AttackConsole, WaveChart, EventFeed, HowItWorks [AI layer labelled advisory, neighbour check 'next'], VerdictBadge), `src/api/client.ts`, `src/styles/theme.css`, Dockerfile (node:22-alpine + npm ci, then caddy:2; build context = repo root)
 - `tests/`: conftest, test_signing, test_crypto_gate, test_physics, test_pipeline, test_api, test_clean, test_replay (incl. real Helene end-to-end without a broker), test_live (attack console with a fake MQTT client)
 - `seashield_concept.png`, `HackGlobal2026_Badge_B9D470.png`, `new.webp`: images
 
@@ -69,10 +69,11 @@ Python 3.12 (pydantic v2, pydantic-settings, paho-mqtt v2, FastAPI, SQLAlchemy 2
 - The 10-phase plan is cut to what the submission needs. Built: live demo (commit 1c6cf9e): engine events (`engine/events.py`: unprotected vs SeaShield alert: ISSUED/HELD/BLOCKED/REVIEW/ESCALATED), API live hub (`api/live.py`: MQTT→WS, /api/events, /api/stats, POST /api/attacks/{spike|suppress|tamper|replay}, 2 s rate limit), single-page dashboard (map, two centres, attack console, wave chart, feed, how-it-works), simulator `--loop`, compose without Postgres (profile db).
 - Deploy: `bash infra/scripts/deploy_vultr.sh <IP> [domain]` (SSH key ~/.ssh/seashield_vultr, default domain <ip-dashes>.sslip.io, keys + .env generated on the server). Waiting on the user for the server IP + deadline time.
 - The repo is still PRIVATE: the classifier blocked `gh repo edit --visibility public`; the user must run it.
-- Honest finding: "suppress" in calm weather is undetectable (plausible); it is caught only during a storm. The AI layer is not implemented (the UI says "in progress").
+- Honest finding: "suppress" in calm weather is undetectable (plausible); it is caught only during a storm.
+- D6 done (commit 9a2bb67, docs/PHASE_D6.md): per-buoy Isolation Forest (`ml/train.py` → models/isolation_forest.joblib, git-ignored, shipped by the deploy script; features in `seashield/engine/features.py`; sklearn pinned to 1.9.1). Validation: physics 0 FP / ~75% on +4..+7.5 m fakes; AI 6 FP / 1.4%. AI deciding alone held 34/137 genuine Helene readings → `fusion.AI_DECIDES=False` (advisory, shown in explanations). Fusion now uses max evidence, not a weighted average. `ml/evaluate.py --part test` is too slow (>10 min); no test numbers claimed.
 
 ## Current status
-Phases 0–2 done. Live test: 233/233 messages TRUSTED (Helene + calm week after a restart with reset), 13 correct unprotected alerts in Helene, 233 verdicts back over MQTT. Physics: 0 of 94,458 real hours flagged. 41 tests pass. Real storm → TRUSTED (CONFIRMED_EVENT needs spatial, Phase 5). Docker Desktop can't start locally ("Virtual Machine Platform not enabled"; user must enable it as admin + reboot). AI layer (Phase 5 Isolation Forest) implemented and model trained; pipeline calls `anomaly.check(..., observed_at, ...)` and commits accepted readings; evaluation results not yet recorded here (run `ml/evaluate.py`). No cloud resources yet ($0 spent); recommended Vultr plan: Shared CPU 2 vCPU/4 GB (or dedicated vx1-g-2c-8g), Ubuntu 24.04, Atlanta.
+Phases 0–2 done. Live test: 233/233 messages TRUSTED (Helene + calm week after a restart with reset), 13 correct unprotected alerts in Helene, 233 verdicts back over MQTT. Physics: 0 of 94,458 real hours flagged. 41 tests pass. Real storm → TRUSTED (CONFIRMED_EVENT needs spatial, Phase 5). Docker Desktop can't start locally ("Virtual Machine Platform not enabled"; user must enable it as admin + reboot). AI layer (Phase 5 Isolation Forest) implemented and model trained; pipeline calls `anomaly.check(..., observed_at, ...)` and commits accepted readings; evaluation results not yet recorded here (run `ml/evaluate.py`). **LIVE on Vultr since 2026-11-15:** https://45-76-249-39.sslip.io (instance `seashield-demo`, vc2-2c-4gb $20/mo, Atlanta, Ubuntu 24.04, IP 45.76.249.39, SSH key `~/.ssh/seashield_vultr` registered in Vultr as `seashield`, backups off). Deployed commit 6070d68: the AI layer is NOT on the server yet (uncommitted, and `models/*` is gitignored so the deploy script does not ship the .joblib). Redeploy = `bash infra/scripts/deploy_vultr.sh 45.76.249.39`. Destroy the instance after judging (credits expire 2026-11-16).
 
 ## Next steps
 1. Phase 3: attacker CLI (tamper/replay/spike) live against the stream; ground truth in data/attack_log.jsonl
@@ -89,6 +90,7 @@ Phases 0–2 done. Live test: 233/233 messages TRUSTED (Helene + calm week after
 - Background processes for live tests: start the broker, engine and simulator as separate processes; stop them afterwards.
 
 ## Session log
+- 2026-11-15: Created the Vultr instance via Chrome, added the SSH key, deployed 6070d68: site + API health OK, engine verdicts flowing.
 - 2026-11-15: AI layer: features.py moved to seashield/engine, per-buoy Isolation Forest train + calibrated scores, evaluate.py (real data + injected attacks), pipeline commit/reset wiring; fusion switched to max-risk + AI_DECIDES flag; Vultr plan advice.
 - 2026-11-15: Deadline mode: live demo (engine events, API live hub + attack console, single-page dashboard), physics poison fix, deploy script; repo still private (user must flip it).
 - 2026-11-14: Phase 2 done: observed_at, per-hour physics limits, replay.py, simulator CLI, restart-safe seq (bug fixed), operator reset + ACL, amqtt dev broker, live E2E 233/233; PHASE_2.md.
