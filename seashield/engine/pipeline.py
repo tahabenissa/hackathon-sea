@@ -45,13 +45,15 @@ class SecurityPipeline:
             ev = Evidence(layer="crypto", passed=False, score=1.0, detail=f"invalid schema: {exc}")
             return fuse(buoy_id, seq, Measurements(), [ev])
 
+        spatial = self.spatial.assess(msg.buoy_id, msg.observed_at, msg.data)
         evidence = [
             crypto_ev,
             self.physics.check(msg.buoy_id, msg.observed_at, msg.data, sent_at=msg.ts),
             self.anomaly.check(msg.buoy_id, msg.observed_at, msg.data),
-            self.spatial.check(msg.buoy_id, msg.observed_at, msg.data),
+            spatial.evidence,
         ]
-        result = fuse(msg.buoy_id, msg.seq, msg.data, evidence)
+        result = fuse(msg.buoy_id, msg.seq, msg.data, evidence,
+                      neighbours_see_storm=spatial.hidden_storm, corroborated=spatial.corroborated)
 
         # Only accepted readings become references (for the AI and for neighbours).
         if result.verdict in (Verdict.TRUSTED, Verdict.CONFIRMED_EVENT):

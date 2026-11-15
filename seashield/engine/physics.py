@@ -74,7 +74,7 @@ class PhysicsChecker:
                     v, p = values.get(name), prev_values.get(name)
                     if v is not None and p is not None and abs(v - p) > max_rate * hours:
                         problems.append(
-                            f"{name} jumped {p} -> {v} in {hours:.1f} h "
+                            f"{name} jumped {p:.2f} -> {v:.2f} in {hours:.1f} h "
                             f"(max plausible {max_rate * hours:.1f})"
                         )
 

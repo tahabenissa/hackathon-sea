@@ -11,7 +11,7 @@
 SeaShield AI is a HackGlobal 2026 hackathon project (theme: Artificial Intelligence). It is a "trust engine" that detects False Data Injection (FDI) attacks on ocean-buoy data before that data can trigger or suppress maritime alerts. It has four layers: a crypto gate (HMAC, seq, timestamp, nonce), physics checks, ML anomaly detection (Isolation Forest), and cross-buoy validation, all feeding a fusion verdict. Deployment target: Vultr, with $200 in credits (hard budget) that **expire 2026-11-16**; after that the instance bills the user's own card, so keep the plan small and destroy it once judging is over. The user wants an ambitious, high-quality project.
 
 ## Hackathon requirements (from the user, 2026-11-15)
-- **Submissions close 15 November 2026** (on Vultr Community). Exact hour/timezone: ask the user.
+- **Submissions close 15 November 2026** (on Vultr Community). Exact hour unknown to the user; working assumption 23:59 UTC+1 on 15 Nov.
 - Tracks: Agentic/GenAI, Multimodal/accessibility, Grounded knowledge/RAG, **Civic and real-world impact** (best fit for SeaShield: a "misinformation checker" for ocean sensors that protects coastal communities).
 - Deliverables: PUBLIC GitHub repo with setup + docs; backend on a Vultr Compute instance; recorded demo video running on Vultr; PUBLIC demo URL with a product-style experience; use case + system design with diagrams and screenshots of the user flow.
 - Judging: Merit (idea, build, fit) · Reach (real users, shares, votes; talk to users in 3+ countries) · Bonus (cross-university teams, community challenges).
@@ -30,6 +30,7 @@ Python 3.12 (pydantic v2, pydantic-settings, paho-mqtt v2, FastAPI, SQLAlchemy 2
 - Full stack: `cp .env.example .env` → `docker compose up -d --build` (attacker: `--profile demo`)
 
 ## File map
+- `README.md`: submission landing page for judges (live URL, problem, try-it flow, screenshots in docs/assets/screenshots/, Mermaid architecture, limitations); rewritten 2026-11-15; links docs/PHASE_5_SPATIAL.md; clone URL needs the repo public
 - `SEASHIELD_AI_MASTER_PROMPT.md`: master spec (threat model, architecture, scenarios, Vultr plan)
 - `docs/PLAN.md`: opens with the **DEADLINE PLAN (15 Nov)**: deliverables status, steps D1–D10 (D1–D2 done; D3 Vultr server + D4 public repo = user), demo video script, honest limitations; then phases 0–10 as the post-hackathon roadmap, risks, checklist
 - `docs/PHASE_0.md`, `PHASE_1.md`, `PHASE_2.md`, `PHASE_D6.md` (AI layer results): phase reports (what was done, results)
@@ -37,7 +38,7 @@ Python 3.12 (pydantic v2, pydantic-settings, paho-mqtt v2, FastAPI, SQLAlchemy 2
 - `docs/assets/phase1/`: stats.json + figures (normal week, Idalia, Helene, Milton, wave vs wind)
 - `.gitattributes`: forces LF line endings (scripts and configs run on Linux)
 - `tests/test_api.py`: API + WebSocket smoke tests
-- `docs/architecture.md`, `docs/threat-model.md`, `docs/evaluation.md` (empty until Phase 6), `docs/decisions/0001,0002,0003` (0003 = cluster, observed_at, split)
+- `docs/architecture.md` (Mermaid: Vultr/Compose overview, engine layers → fusion → verdicts, verdict table, message-lifecycle sequence), `docs/threat-model.md`, `docs/evaluation.md` (Phase 6 evaluation report from measured validation results; being written by an agent 2026-11-15), `docs/decisions/0001,0002,0003` (0003 = cluster, observed_at, split)
 - `pyproject.toml`, `Dockerfile` (one image for all Python services), `docker-compose.yml` (mosquitto, engine, api, simulator looping 2024-09-23→28 at 2 s/h, web=Caddy; postgres only in profile `db`), `.env.example`, `.gitignore`, `.dockerignore`
 - `config/buoys.yaml`: SS-B01=42036 West Tampa (all sensors), SS-B02=42097 Pulley Ridge (waves), SS-B03=42099 St. Petersburg (waves), SS-B04=42013 C10 (wind/pressure); lat/lon + `sensors`
 - `seashield/config.py`: Settings (env prefix SEASHIELD_)
@@ -73,7 +74,7 @@ Python 3.12 (pydantic v2, pydantic-settings, paho-mqtt v2, FastAPI, SQLAlchemy 2
 - D6 done (commit 9a2bb67, docs/PHASE_D6.md): per-buoy Isolation Forest (`ml/train.py` → models/isolation_forest.joblib, git-ignored, shipped by the deploy script; features in `seashield/engine/features.py`; sklearn pinned to 1.9.1). Validation: physics 0 FP / ~75% on +4..+7.5 m fakes; AI 6 FP / 1.4%. AI deciding alone held 34/137 genuine Helene readings → `fusion.AI_DECIDES=False` (advisory, shown in explanations). Fusion now uses max evidence, not a weighted average. `ml/evaluate.py --part test` is too slow (>10 min); no test numbers claimed.
 
 ## Current status
-Phases 0–2 done. Live test: 233/233 messages TRUSTED (Helene + calm week after a restart with reset), 13 correct unprotected alerts in Helene, 233 verdicts back over MQTT. Physics: 0 of 94,458 real hours flagged. 41 tests pass. Real storm → TRUSTED (CONFIRMED_EVENT needs spatial, Phase 5). Docker Desktop can't start locally ("Virtual Machine Platform not enabled"; user must enable it as admin + reboot). AI layer (Phase 5 Isolation Forest) implemented and model trained; pipeline calls `anomaly.check(..., observed_at, ...)` and commits accepted readings; evaluation results not yet recorded here (run `ml/evaluate.py`). **LIVE on Vultr since 2026-11-15:** https://45-76-249-39.sslip.io (instance `seashield-demo`, vc2-2c-4gb $20/mo, Atlanta, Ubuntu 24.04, IP 45.76.249.39, SSH key `~/.ssh/seashield_vultr` registered in Vultr as `seashield`, backups off). Deployed commit 6070d68: the AI layer is NOT on the server yet (uncommitted, and `models/*` is gitignored so the deploy script does not ship the .joblib). Redeploy = `bash infra/scripts/deploy_vultr.sh 45.76.249.39`. Destroy the instance after judging (credits expire 2026-11-16).
+Phases 0–2 done. Live test: 233/233 messages TRUSTED (Helene + calm week after a restart with reset), 13 correct unprotected alerts in Helene, 233 verdicts back over MQTT. Physics: 0 of 94,458 real hours flagged. 41 tests pass. Real storm → TRUSTED (CONFIRMED_EVENT needs spatial, Phase 5). Docker Desktop can't start locally ("Virtual Machine Platform not enabled"; user must enable it as admin + reboot). AI layer (Phase 5 Isolation Forest) implemented and model trained; pipeline calls `anomaly.check(..., observed_at, ...)` and commits accepted readings; evaluation results not yet recorded here (run `ml/evaluate.py`). **LIVE on Vultr since 2026-11-15:** https://45-76-249-39.sslip.io (instance `seashield-demo`, vc2-2c-4gb $20/mo, Atlanta, Ubuntu 24.04, IP 45.76.249.39, SSH key `~/.ssh/seashield_vultr` registered in Vultr as `seashield`, backups off). Deployed commit d3aea4b (includes D6 AI layer; the deploy script ships `models/isolation_forest.joblib` in data.tar.gz because `models/*` is gitignored); engine logs "AI anomaly models loaded for SS-B01..B04". Redeploy = `bash infra/scripts/deploy_vultr.sh 45.76.249.39`. Destroy the instance after judging (credits expire 2026-11-16).
 
 ## Next steps
 1. Phase 3: attacker CLI (tamper/replay/spike) live against the stream; ground truth in data/attack_log.jsonl
@@ -90,6 +91,8 @@ Phases 0–2 done. Live test: 233/233 messages TRUSTED (Helene + calm week after
 - Background processes for live tests: start the broker, engine and simulator as separate processes; stop them afterwards.
 
 ## Session log
+- 2026-11-15: Verified all 4 attacks live on Vultr (spike HELD, tamper/replay REJECTED, calm suppress TRUSTED = known limit); physics detail rounding fix; 3 agents running: spatial check, evaluation.md, README.
+- 2026-11-15: Redeployed d3aea4b with the AI model; verified the live engine adds advisory AI scores during Helene (verdicts stay TRUSTED).
 - 2026-11-15: Created the Vultr instance via Chrome, added the SSH key, deployed 6070d68: site + API health OK, engine verdicts flowing.
 - 2026-11-15: AI layer: features.py moved to seashield/engine, per-buoy Isolation Forest train + calibrated scores, evaluate.py (real data + injected attacks), pipeline commit/reset wiring; fusion switched to max-risk + AI_DECIDES flag; Vultr plan advice.
 - 2026-11-15: Deadline mode: live demo (engine events, API live hub + attack console, single-page dashboard), physics poison fix, deploy script; repo still private (user must flip it).

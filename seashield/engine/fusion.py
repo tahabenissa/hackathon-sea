@@ -2,10 +2,14 @@
 
 Rules (see SEASHIELD_AI_MASTER_PROMPT.md, section 4):
   - crypto failure                         -> REJECTED (hard rule)
+  - calm reading while neighbours see storm -> SUPPRESSED_WARNING (escalate: fail safe; checked
+                                              BEFORE SUSPECTED_FDI, because a hidden storm is
+                                              the most dangerous lie and must reach an operator
+                                              as an escalation, not as a routine review)
   - extreme reading, corroborated          -> CONFIRMED_EVENT (real storm: let the alert through)
-  - extreme reading, not corroborated      -> SUSPECTED_FDI (hold alert for an operator)
-  - calm reading while neighbours see storm -> SUPPRESSED_WARNING (escalate: fail safe)
-Weights and thresholds are initial values, to be tuned in Phase 6.
+  - any layer score >= 0.5                 -> SUSPECTED_FDI (hold alert for an operator)
+"Corroborated" and "neighbours see storm" come from the neighbour layer (engine/spatial.py),
+whose tolerances are measured on real data (ml/spatial_stats.py).
 """
 
 from seashield.common.schema import Assessment, Evidence, Measurements, Verdict
@@ -26,7 +30,10 @@ def fuse(
     m: Measurements,
     evidence: list[Evidence],
     neighbours_see_storm: bool = False,
+    corroborated: bool = False,
 ) -> Assessment:
+    """`neighbours_see_storm`: a fresh neighbour reports storm waves and this reading is far below it.
+    `corroborated`: the wave height agrees with at least one fresh neighbour."""
     by_layer = {e.layer: e for e in evidence}
 
     crypto = by_layer.get("crypto")
@@ -43,15 +50,19 @@ def fuse(
     extreme = m.wave_height_m is not None and m.wave_height_m >= EXTREME_WAVES_M
     reasons = "; ".join(e.detail for e in evidence if not e.passed)
 
-    if extreme and risk < SUSPICIOUS_RISK and neighbours_see_storm:
+    spatial = by_layer.get("spatial")
+
+    if not extreme and neighbours_see_storm:
+        return _assess(buoy_id, seq, Verdict.SUPPRESSED_WARNING, max(risk, SUSPICIOUS_RISK), evidence,
+                       f"Calm reading while neighbours report a storm: possible hidden danger, "
+                       f"escalated: {reasons}.")
+    if extreme and risk < SUSPICIOUS_RISK and corroborated and spatial is not None:
         return _assess(buoy_id, seq, Verdict.CONFIRMED_EVENT, risk, evidence,
-                       "Extreme reading corroborated by physics and neighbours: real event.")
+                       f"Extreme reading confirmed by physics and a neighbour: real event "
+                       f"({spatial.detail}).")
     if risk >= SUSPICIOUS_RISK:
         return _assess(buoy_id, seq, Verdict.SUSPECTED_FDI, risk, evidence,
                        f"Authentic but implausible, alert held for operator review: {reasons}.")
-    if not extreme and neighbours_see_storm:
-        return _assess(buoy_id, seq, Verdict.SUPPRESSED_WARNING, max(risk, SUSPICIOUS_RISK), evidence,
-                       "Calm reading while neighbours report a storm: possible hidden danger, escalated.")
     ai = by_layer.get("anomaly")
     if ai is not None and ai.score is not None and ai.score >= SUSPICIOUS_RISK:
         return _assess(buoy_id, seq, Verdict.TRUSTED, risk, evidence,
