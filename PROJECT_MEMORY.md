@@ -3,7 +3,7 @@
 > Maintained by the project-memory skill and loaded at every session start.
 > Read this first; open other files only when a task needs them.
 
-**Last updated:** 2026-11-14 (Phase 2 complete, committed 8aa43a8; config.py has `topic_control_reset`; amqtt is in the dev extras)
+**Last updated:** 2026-11-15 (live demo built, commits 1c6cf9e + 0c8e0c7; waiting for the Vultr IP)
 **Repo:** https://github.com/tahabenissa/hackathon-sea (private, branch main)
 **Root:** D:\hackthon_sea
 
@@ -17,14 +17,14 @@ SeaShield AI is a HackGlobal 2026 hackathon project (theme: Artificial Intellige
 - Judging: Merit (idea, build, fit) · Reach (real users, shares, votes; talk to users in 3+ countries) · Bonus (cross-university teams, community challenges).
 
 ## Stack and tools
-Python 3.12 (pydantic v2, pydantic-settings, paho-mqtt v2, FastAPI, SQLAlchemy 2, psycopg 3, scikit-learn, pandas 3, pyarrow, httpx; matplotlib in the `ml` extra), Mosquitto 2, PostgreSQL 16, React 18 + Vite 8.3.8 + React Router 7.18.5 + TS + Leaflet + Recharts (npm audit: 0 vulns), Caddy 2 (HTTPS + reverse proxy), Docker Compose. Dev machine: Windows 11 with Python 3.12.10, Node 24, Docker 29 and git installed. Data: NOAA NDBC stdmet.
+Python 3.12 (pydantic v2, pydantic-settings, paho-mqtt v2, FastAPI, SQLAlchemy 2, psycopg 3, scikit-learn, pandas 3, pyarrow, httpx; matplotlib in the `ml` extra), Mosquitto 2, PostgreSQL 16, React 18 + Vite 8.3.8 + TS (react-router removed) + Leaflet + Recharts (npm audit: 0 vulns), Caddy 2 (HTTPS + reverse proxy), Docker Compose. Dev machine: Windows 11 with Python 3.12.10, Node 24, Docker 29 and git installed. Data: NOAA NDBC stdmet.
 
 ## How to build / run / test
 - `python -m venv .venv` → `.venv\Scripts\activate` → `pip install -e ".[dev,ml]"`
 - `python infra/scripts/gen_buoy_keys.py` → secrets/buoy_keys.json
 - Data: `python ml/download_ndbc.py <st> 2023 2024 2025` → `python ml/clean.py 42036 42097 42099 42013` → `python ml/explore.py`
 - Live network without Docker: `amqtt -c infra/dev/amqtt.yaml` | `$env:SEASHIELD_MQTT_HOST="localhost"; python -m seashield.engine` | `python -m seashield.simulator --start 2024-09-25T12:00 --end 2024-09-27T12:00 --interval 1` (add `--reset` when jumping back in time)
-- `pytest` → 41 passed; `ruff check .` → clean (a global ruff config also enables BLE/FURB rules)
+- `pytest` → 49 passed; `ruff check .` → clean (a global ruff config also enables BLE/FURB rules)
 - API: `uvicorn seashield.api.main:app --reload` (docs at /api/docs)
 - Dashboard: `cd dashboard && npm install && npm run dev`
 - Full stack: `cp .env.example .env` → `docker compose up -d --build` (attacker: `--profile demo`)
@@ -38,19 +38,20 @@ Python 3.12 (pydantic v2, pydantic-settings, paho-mqtt v2, FastAPI, SQLAlchemy 2
 - `.gitattributes`: forces LF line endings (scripts and configs run on Linux)
 - `tests/test_api.py`: API + WebSocket smoke tests
 - `docs/architecture.md`, `docs/threat-model.md`, `docs/evaluation.md` (empty until Phase 6), `docs/decisions/0001,0002,0003` (0003 = cluster, observed_at, split)
-- `pyproject.toml`, `Dockerfile` (one image for all Python services), `docker-compose.yml`, `.env.example`, `.gitignore`, `.dockerignore`
+- `pyproject.toml`, `Dockerfile` (one image for all Python services), `docker-compose.yml` (mosquitto, engine, api, simulator looping 2024-09-23→28 at 2 s/h, web=Caddy; postgres only in profile `db`), `.env.example`, `.gitignore`, `.dockerignore`
 - `config/buoys.yaml`: SS-B01=42036 West Tampa (all sensors), SS-B02=42097 Pulley Ridge (waves), SS-B03=42099 St. Petersburg (waves), SS-B04=42013 C10 (wind/pressure); lat/lon + `sensors`
 - `seashield/config.py`: Settings (env prefix SEASHIELD_)
 - `seashield/common/`: `schema.py` (Measurements, Telemetry with `ts` + `observed_at`, Verdict, Evidence, Assessment), `signing.py` (HMAC canonical JSON), `registry.py` (Buoy has a `sensors` tuple), `mqtt.py` (`make_client`, `connect_with_retry`)
-- `seashield/engine/`: `crypto_gate.py` ✅, `physics.py` ✅ (uses observed_at; per-hour limits from real data: wave 3.5 m/h, wind 15, pressure 20, temp 3; observed_at must increase and be ≤ ts+120 s), `fusion.py` ✅, `baseline.py` ✅ (naive >6 m alert), `pipeline.py` ✅ (+ `reset_history()`), `anomaly.py` (stub), `spatial.py` (stub + haversine), `__main__.py` (MQTT consumer, verdicts → `seashield/verdicts/<id>`, operator reset on `seashield/control/reset`, totals log)
-- `seashield/simulator/`: `buoy.py` ✅ (VirtualBuoy; seq = max(prev+1, now µs), restart-safe), `replay.py` ✅ (shared historical clock, own sensors only, empty hour = no message), `__main__.py` ✅ (`--start --end --interval --hours --reset`)
+- `seashield/engine/`: `crypto_gate.py` ✅, `physics.py` ✅ (uses observed_at; per-hour limits from real data: wave 3.5 m/h, wind 15, pressure 20, temp 3; observed_at must increase and be ≤ ts+120 s; history advances only on plausible readings), `fusion.py` ✅, `baseline.py` ✅ (naive >6 m alert), `pipeline.py` ✅ (+ `reset_history()`), `events.py` ✅ (event JSON + SeaShield alert decision), `anomaly.py` (stub), `spatial.py` (stub + haversine), `__main__.py` (MQTT consumer, verdicts → `seashield/verdicts/<id>`, operator reset on `seashield/control/reset`, totals log)
+- `seashield/simulator/`: `buoy.py` ✅ (VirtualBuoy; seq = max(prev+1, now µs), restart-safe), `replay.py` ✅ (shared historical clock, own sensors only, empty hour = no message), `__main__.py` ✅ (`--start --end --interval --hours --reset --loop`)
 - `infra/dev/amqtt.yaml`: pure-Python dev broker on 127.0.0.1:1883 (Docker blocked locally)
-- `seashield/attacker/`: `scenarios.py` ✅ (tamper, replay, compromised_spike, false_wind, suppress, drift), `__main__.py` (stub CLI)
-- `seashield/api/`: `main.py`, `db.py`, `ws.py`, `routes/` (health, buoys, measurements, incidents, alerts, attacks; mostly stubs)
+- `seashield/attacker/`: `scenarios.py` ✅ (tamper, replay; compromised_spike/false_wind/suppress/drift craft FRESH signed msgs: seq+1, new nonce/ts, observed_at+30 min), `__main__.py` (stub CLI, unused: attacks run from the API)
+- `seashield/api/`: `main.py` (lifespan starts the hub), `live.py` ✅ LiveHub, `ws.py` ✅ /ws/live, `routes/live.py` ✅ (/events, /stats), `routes/attacks.py` ✅, `db.py` + measurements/incidents/alerts routes (stubs)
 - `ml/`: `download_ndbc.py` ✅, `clean.py` ✅ (per-column sentinels, hourly, vector wind dir, `interpolate_short_gaps`), `survey.py` ✅ (compare stations), `explore.py` ✅ (stats + figures), `features.py`/`train.py`/`evaluate.py` (stubs), `README.md`
+- `infra/scripts/deploy_vultr.sh`: one-command deploy (git archive + data → server, Docker, ufw 22/80/443, keys/.env on the server, sslip.io HTTPS)
 - `infra/`: mosquitto (dev conf published on 127.0.0.1:1883, prod TLS conf, acl incl. `operator` for control topics), `caddy/Caddyfile`, `postgres/init.sql` (buoys with sensors[], measurements, incidents, alerts), `scripts/` (gen_buoy_keys.py, gen_certs.sh, server_setup.sh)
-- `dashboard/`: Vite React app; `src/App.tsx` (8 routes), `src/pages/*` (placeholders, Overview calls /api/health), `src/api/client.ts`, `src/styles/theme.css`, Dockerfile (node:22-alpine + npm ci, then caddy:2; build context = repo root)
-- `tests/`: conftest, test_signing, test_crypto_gate, test_physics, test_pipeline, test_api, test_clean, test_replay (incl. real Helene end-to-end without a broker)
+- `dashboard/`: single page `src/App.tsx` + `useLive.ts` + `components/` (BuoyMap Leaflet/CARTO dark, Centres, AttackConsole, WaveChart, EventFeed, HowItWorks, VerdictBadge), `src/api/client.ts`, `src/styles/theme.css`, Dockerfile (node:22-alpine + npm ci, then caddy:2; build context = repo root)
+- `tests/`: conftest, test_signing, test_crypto_gate, test_physics, test_pipeline, test_api, test_clean, test_replay (incl. real Helene end-to-end without a broker), test_live (attack console with a fake MQTT client)
 - `seashield_concept.png`, `HackGlobal2026_Badge_B9D470.png`, `new.webp`: images
 
 ## Key concepts and decisions
@@ -63,6 +64,12 @@ Python 3.12 (pydantic v2, pydantic-settings, paho-mqtt v2, FastAPI, SQLAlchemy 2
 - Split: train 2023 (Idalia), validation 2024-H1, test 2024-07→2025-12 (Debby, Helene, Milton). Never tune on test.
 - Engine writes the DB; the API reads the DB and streams MQTT verdicts over WebSocket (planned, Phase 7).
 - One Vultr VPS (2 vCPU/4 GB, ~$20–24/mo, verify). No resource is created without user approval; a stopped instance is still billed.
+
+## Deadline mode (2026-11-15)
+- The 10-phase plan is cut to what the submission needs. Built: live demo (commit 1c6cf9e): engine events (`engine/events.py`: unprotected vs SeaShield alert: ISSUED/HELD/BLOCKED/REVIEW/ESCALATED), API live hub (`api/live.py`: MQTT→WS, /api/events, /api/stats, POST /api/attacks/{spike|suppress|tamper|replay}, 2 s rate limit), single-page dashboard (map, two centres, attack console, wave chart, feed, how-it-works), simulator `--loop`, compose without Postgres (profile db).
+- Deploy: `bash infra/scripts/deploy_vultr.sh <IP> [domain]` (SSH key ~/.ssh/seashield_vultr, default domain <ip-dashes>.sslip.io, keys + .env generated on the server). Waiting on the user for the server IP + deadline time.
+- The repo is still PRIVATE: the classifier blocked `gh repo edit --visibility public`; the user must run it.
+- Honest finding: "suppress" in calm weather is undetectable (plausible); it is caught only during a storm. The AI layer is not implemented (the UI says "in progress").
 
 ## Current status
 Phases 0–2 done. Live test: 233/233 messages TRUSTED (Helene + calm week after a restart with reset), 13 correct unprotected alerts in Helene, 233 verdicts back over MQTT. Physics: 0 of 94,458 real hours flagged. 41 tests pass. Real storm → TRUSTED (CONFIRMED_EVENT needs spatial, Phase 5). Docker Desktop can't start locally ("Virtual Machine Platform not enabled"; user must enable it as admin + reboot). No model, no cloud resources ($0 spent).
@@ -82,6 +89,7 @@ Phases 0–2 done. Live test: 233/233 messages TRUSTED (Helene + calm week after
 - Background processes for live tests: start the broker, engine and simulator as separate processes; stop them afterwards.
 
 ## Session log
+- 2026-11-15: Deadline mode: live demo (engine events, API live hub + attack console, single-page dashboard), physics poison fix, deploy script; repo still private (user must flip it).
 - 2026-11-14: Phase 2 done: observed_at, per-hour physics limits, replay.py, simulator CLI, restart-safe seq (bug fixed), operator reset + ACL, amqtt dev broker, live E2E 233/233; PHASE_2.md.
 - 2026-11-14: Phase 1 done: surveyed 11 stations, chose the West Florida cluster, clean.py + survey.py + explore.py, fixed an interpolation bug, data-notes + ADR 0003 + PHASE_1.md.
 - 2026-11-14: Phase 0 done: env, keys, .env, lint fixes, test_api, npm major upgrades (0 vulns), node:22 + npm ci, .gitattributes, private repo hackathon-sea pushed; report in docs/PHASE_0.md.

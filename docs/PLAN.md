@@ -6,6 +6,63 @@
 
 ---
 
+## ⏰ DEADLINE PLAN: submission closes 15 November 2026 (on Vultr Community)
+
+> Added 2026-11-15. The phased plan below assumed weeks. With the deadline today, only what
+> the **submission requires** is done now; the rest moves to the post-hackathon roadmap.
+> **Track:** Civic and real-world impact (SeaShield = a misinformation checker for ocean
+> sensors that protects coastal communities from fake and hidden disaster alerts).
+
+### Required deliverables → status
+
+| # | Deliverable (hackathon rules) | Status | Owner |
+|---|---|---|---|
+| 1 | **Public** GitHub repo with setup instructions + docs | 🟡 Docs ready, secrets scan clean; **repo still private** | **You**: `! gh repo edit tahabenissa/hackathon-sea --visibility public --accept-visibility-change-consequences` |
+| 2 | Backend deployed on a **Vultr Compute** instance | 🟡 Deploy script ready (`infra/scripts/deploy_vultr.sh`); **waiting for the server IP** | You create the server → I deploy |
+| 3 | **Public demo URL**, product-style | 🟡 Live page built and tested locally; goes live with #2 at `https://<ip>.sslip.io` | Me |
+| 4 | Recorded **demo video** running on Vultr | ⬜ After #3 | You record (script below) |
+| 5 | Use case + system design with **diagrams and screenshots** | 🟡 Diagrams + real-data figures exist; screenshots after #3 | Me |
+| 6 | Submission on Vultr Community | ⬜ Last step | You |
+| — | **Reach**: real users in 3+ countries (judging) | ⬜ Share the URL as soon as it is live | You |
+
+### Steps, in order
+
+| Step | What | Time | Status |
+|---|---|---|---|
+| D1 | Live demo: engine events (unprotected vs SeaShield alert decision), API live hub + WebSocket, attack console (spike, suppress, tamper, replay), single-page dashboard, looping Helene replay | ~4 h | ✅ Done (commit `1c6cf9e`, 49 tests) |
+| D2 | One-command Vultr deploy script (Docker, ufw 22/80/443, keys + `.env` on the server, free HTTPS) | 20 min | ✅ Done (commit `0c8e0c7`) |
+| D3 | **Create the Vultr server**: Ubuntu 24.04, 2 vCPU / 4 GB (~$20–24/mo, hourly), `seashield` SSH key, backups OFF → send the IP | 10 min | ⏳ **You** |
+| D4 | **Make the repo public** (command above) | 1 min | ⏳ **You** |
+| D5 | Deploy: `bash infra/scripts/deploy_vultr.sh <IP>` → check the URL from a phone, launch each attack, verify verdicts | 30 min | ⬜ Me |
+| D6 | (If time) quick AI layer: Isolation Forest trained on 2023 data, shown as the 4th piece of evidence | ~1 h | ⬜ Optional |
+| D7 | Screenshots of the user flow + README "submission" section (problem, track, architecture diagram, how to use, limitations, Vultr URL) | 45 min | ⬜ Me |
+| D8 | Record the ~3 min demo video on the live Vultr URL (script below) | 30 min | ⬜ You |
+| D9 | Share the URL + ask for feedback/votes from people in 3+ countries | ongoing | ⬜ You |
+| D10 | Submit on Vultr Community before the deadline | 15 min | ⬜ You |
+
+### Demo video script (~3 min, on the Vultr URL)
+1. **Problem (20 s):** buoys feed disaster-warning centres; centres trust what they receive.
+2. **Live network (20 s):** the map, 4 real NOAA buoys, "Real NOAA data · simulated attacks".
+3. **Fake alarm (40 s):** "Hacked buoy fakes giant waves" → unprotected centre: 🚨 DISASTER ALERT;
+   SeaShield: *alert held*, with the reason ("wave jumped 0.6 → 8.1 m in 1 h").
+4. **Tamper + replay (30 s):** both rejected by the crypto gate; the unprotected centre still alerts on the tampered 9 m.
+5. **Real storm (30 s):** Hurricane Helene in the replay → SeaShield lets the real warnings through.
+6. **Hide the storm (20 s):** during Helene, the suppression attack is caught (7.6 m → 1 m is implausible).
+7. **Close (20 s):** 4 layers, real data, running on Vultr, open source.
+
+### Honest limitations to state in the submission
+- All attacks are **simulated** on real historical NOAA data, not a field validation.
+- The AI anomaly layer is **in progress** unless D6 is done; detection now relies on crypto + physics rules learned from real data.
+- Suppression in **calm** weather (1.5 m → 1 m) is physically plausible, so it is **not** detectable; it is caught during storms.
+- Cross-buoy (neighbour) verification and coordinated multi-buoy attacks: future work.
+- Docker cannot start on the dev PC (Windows "Virtual Machine Platform" off); everything runs on Vultr (Linux).
+
+### Moved to after the hackathon
+Phases 5 (AI + spatial in full), 6 (formal evaluation), 7 (database persistence),
+remaining Phase 8 pages, Mosquitto TLS for remote buoys. The phase descriptions below stay as the roadmap.
+
+---
+
 ## 0. How to read this plan
 
 Every phase has the same structure:
@@ -35,14 +92,15 @@ Every phase has the same structure:
 | Message schema, HMAC signing, buoy registry | ✅ Written |
 | Crypto gate (signature, seq, timestamp, nonce) | ✅ Written |
 | Physics checks, fusion rules, unprotected baseline | ✅ Written; physics uses `observed_at` + per-hour limits from real data (Phase 2) |
-| Attack scenarios (tamper, replay, spike, wind, suppress, drift) | ✅ Written as functions |
-| Tests (signing, crypto gate, physics, pipeline, API, clean, replay) | ✅ **41 passing** |
-| Environment, git, private repo `hackathon-sea` | ✅ Phase 0 done |
+| Attack scenarios (tamper, replay, spike, wind, suppress, drift) | ✅ Live from the dashboard attack console (spike, suppress, tamper, replay) |
+| Tests (signing, crypto gate, physics, pipeline, API, clean, replay, live hub) | ✅ **49 passing** |
+| Environment, git, repo `hackathon-sea` | ✅ Phase 0 done; repo must be made **public** (deadline plan D4) |
 | NOAA data: cluster 42036/42097/42099/42013, cleaned, storms found, split defined | ✅ Phase 1 done ([`PHASE_1.md`](PHASE_1.md), [`data-notes.md`](data-notes.md)) |
 | Simulator replaying NOAA data over MQTT, engine live, operator reset | ✅ Phase 2 done ([`PHASE_2.md`](PHASE_2.md)); Docker blocked locally (VM Platform off) |
 | ML model, spatial check | ⬜ Skeleton only |
-| API persistence, WebSocket feed, dashboard pages | ⬜ Skeleton only |
-| Vultr deployment | ⬜ Not started (no resource created, $0 spent) |
+| Unprotected vs SeaShield side by side, WebSocket feed, live dashboard | ✅ Done in deadline mode (single page) |
+| API persistence (Postgres) | ⬜ Moved after the hackathon |
+| Vultr deployment | 🟡 Script ready; waiting for the server (no resource created yet, $0 spent) |
 
 ---
 
@@ -548,11 +606,11 @@ back what happened.
 - [x] Phase 0: environment works, tests green, first commit, private repo → [`PHASE_0.md`](PHASE_0.md)
 - [x] Phase 1: buoy cluster chosen, data cleaned, storm identified, split defined → [`PHASE_1.md`](PHASE_1.md)
 - [x] Phase 2: simulator replays data over MQTT, engine receives → [`PHASE_2.md`](PHASE_2.md)
-- [ ] Phase 3: attacker CLI; tamper/replay rejected; spike held
-- [ ] Phase 4: unprotected vs SeaShield recorded side by side
+- [x] Phase 3: attacks live (from the API/dashboard instead of a CLI); tamper/replay rejected; spike held
+- [x] Phase 4: unprotected vs SeaShield side by side (engine events + dashboard)
 - [ ] Phase 5: physics calibrated, AI trained, spatial done, fusion tested
 - [ ] Phase 6: `evaluate.py` produces real metrics + ablation
 - [ ] Phase 7: API + DB + WebSocket + demo token
-- [ ] Phase 8: dashboard pages 1–3 complete, then 4–8
+- [x] Phase 8 (deadline version): one live page with map, both centres, attack console, chart, feed, explanation
 - [ ] Phase 9: Vultr instance, firewall, HTTPS, stack running, budget tracked
 - [ ] Phase 10: demo mode, backup video, slides, README, 3 rehearsals, submitted
