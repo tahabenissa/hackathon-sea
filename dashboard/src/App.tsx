@@ -11,7 +11,22 @@ import { useLive } from "./useLive";
 const HOUR = 3_600_000;
 
 export default function App() {
-  const { events, buoys, scenarios, stats, connected } = useLive();
+  const { events: allEvents, buoys, scenarios, stats, connected } = useLive();
+
+  // The demo replays the same storm in a loop. Keep only the current round: a jump back in
+  // sea time of more than a day means the replay restarted (old rounds would freeze the clock
+  // and mark every buoy offline).
+  const events = useMemo(() => {
+    let start = 0;
+    let max = 0;
+    allEvents.forEach((e, i) => {
+      const t = e.observed_at ? Date.parse(e.observed_at) : 0;
+      if (!t || e.simulated_attack) return;
+      if (t < max - 24 * HOUR) start = i;
+      max = t < max - 24 * HOUR ? t : Math.max(max, t);
+    });
+    return allEvents.slice(start);
+  }, [allEvents]);
 
   const { latest, offline, clock } = useMemo(() => {
     const latest: Record<string, LiveEvent> = {};
