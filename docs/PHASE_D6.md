@@ -59,5 +59,6 @@ sends the reading to review.
 - A better ML model for this job: a **residual model** (predict each reading from the buoy's
   own recent history + its other sensors + neighbours; flag large surprises), trained on
   multi-year data that includes hurricanes.
-- The test-period evaluation (`--part test`) scores readings one by one and is slow
-  (> 10 min); it was not completed before the deadline. No test numbers are claimed.
+- The test-period evaluation (`--part test`, 2024-07 → 2025-12) was run once afterwards
+  (10 min 42 s, nothing tuned after seeing it): results in [`evaluation.md`](evaluation.md) §4
+  and `assets/eval/test.json`.

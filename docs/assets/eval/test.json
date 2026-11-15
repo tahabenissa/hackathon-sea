@@ -1,0 +1,228 @@
+{
+  "part": "test",
+  "period": [
+    "2024-07-01",
+    "2025-12-31"
+  ],
+  "buoys": {
+    "SS-B01": {
+      "attacked_field": "wave_height_m",
+      "real": {
+        "n": 13171,
+        "phys": 0,
+        "ai": 9,
+        "either": 9,
+        "storm_n": 291,
+        "storm_phys": 0,
+        "storm_ai": 9
+      },
+      "attacks": {
+        "0.5": {
+          "n": 50,
+          "phys": 0,
+          "ai": 0,
+          "either": 0
+        },
+        "1.0": {
+          "n": 46,
+          "phys": 0,
+          "ai": 0,
+          "either": 0
+        },
+        "2.0": {
+          "n": 47,
+          "phys": 0,
+          "ai": 0,
+          "either": 0
+        },
+        "4.0": {
+          "n": 53,
+          "phys": 53,
+          "ai": 0,
+          "either": 53
+        },
+        "7.5": {
+          "n": 52,
+          "phys": 52,
+          "ai": 0,
+          "either": 52
+        }
+      }
+    },
+    "SS-B02": {
+      "attacked_field": "wave_height_m",
+      "real": {
+        "n": 7362,
+        "phys": 0,
+        "ai": 22,
+        "either": 22,
+        "storm_n": 269,
+        "storm_phys": 0,
+        "storm_ai": 22
+      },
+      "attacks": {
+        "0.5": {
+          "n": 31,
+          "phys": 0,
+          "ai": 0,
+          "either": 0
+        },
+        "1.0": {
+          "n": 28,
+          "phys": 0,
+          "ai": 1,
+          "either": 1
+        },
+        "2.0": {
+          "n": 44,
+          "phys": 0,
+          "ai": 0,
+          "either": 0
+        },
+        "4.0": {
+          "n": 27,
+          "phys": 27,
+          "ai": 1,
+          "either": 27
+        },
+        "7.5": {
+          "n": 36,
+          "phys": 36,
+          "ai": 4,
+          "either": 36
+        }
+      }
+    },
+    "SS-B03": {
+      "attacked_field": "wave_height_m",
+      "real": {
+        "n": 11017,
+        "phys": 0,
+        "ai": 1,
+        "either": 1,
+        "storm_n": 97,
+        "storm_phys": 0,
+        "storm_ai": 1
+      },
+      "attacks": {
+        "0.5": {
+          "n": 41,
+          "phys": 0,
+          "ai": 0,
+          "either": 0
+        },
+        "1.0": {
+          "n": 34,
+          "phys": 0,
+          "ai": 0,
+          "either": 0
+        },
+        "2.0": {
+          "n": 52,
+          "phys": 0,
+          "ai": 0,
+          "either": 0
+        },
+        "4.0": {
+          "n": 54,
+          "phys": 54,
+          "ai": 1,
+          "either": 54
+        },
+        "7.5": {
+          "n": 43,
+          "phys": 43,
+          "ai": 0,
+          "either": 43
+        }
+      }
+    },
+    "SS-B04": {
+      "attacked_field": "wind_speed_ms",
+      "real": {
+        "n": 12474,
+        "phys": 0,
+        "ai": 13,
+        "either": 13,
+        "storm_n": 214,
+        "storm_phys": 0,
+        "storm_ai": 13
+      },
+      "attacks": {
+        "0.5": {
+          "n": 35,
+          "phys": 0,
+          "ai": 2,
+          "either": 2
+        },
+        "1.0": {
+          "n": 48,
+          "phys": 0,
+          "ai": 0,
+          "either": 0
+        },
+        "2.0": {
+          "n": 56,
+          "phys": 0,
+          "ai": 0,
+          "either": 0
+        },
+        "4.0": {
+          "n": 55,
+          "phys": 0,
+          "ai": 2,
+          "either": 2
+        },
+        "7.5": {
+          "n": 49,
+          "phys": 0,
+          "ai": 0,
+          "either": 0
+        }
+      }
+    }
+  },
+  "totals": {
+    "real": {
+      "n": 44024,
+      "phys": 0,
+      "ai": 45,
+      "either": 45,
+      "storm_n": 871,
+      "storm_phys": 0,
+      "storm_ai": 45
+    },
+    "attacks": {
+      "0.5": {
+        "n": 157,
+        "phys": 0,
+        "ai": 2,
+        "either": 2
+      },
+      "1.0": {
+        "n": 156,
+        "phys": 0,
+        "ai": 1,
+        "either": 1
+      },
+      "2.0": {
+        "n": 199,
+        "phys": 0,
+        "ai": 0,
+        "either": 0
+      },
+      "4.0": {
+        "n": 189,
+        "phys": 134,
+        "ai": 4,
+        "either": 136
+      },
+      "7.5": {
+        "n": 180,
+        "phys": 131,
+        "ai": 4,
+        "either": 131
+      }
+    }
+  }
+}
